@@ -1,3 +1,4 @@
+process.env.CATALOG_MODE='database';
 import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';

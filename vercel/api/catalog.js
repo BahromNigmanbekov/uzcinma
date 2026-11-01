@@ -2,8 +2,8 @@ import {bundledCatalog,publicBundledMovie,bundledHome} from '../server/bundled.j
 
 import {database,demoEnabled,demoMovies,GENRES,movieDTO,send,fail,query} from '../server/core.js';
 export default async function handler(req,res){
- res.setHeader('X-Uzcinma-API','embedded-catalog-v2');
- res.setHeader('X-Uzcinma-Catalog-Mode',process.env.TURSO_DATABASE_URL?'database':process.env.CATALOG_MODE==='demo'?'demo':'bundle');
+ res.setHeader('X-Uzcinma-API','bundle-default-v3');
+ res.setHeader('X-Uzcinma-Catalog-Mode',process.env.CATALOG_MODE==='database'?'database':process.env.CATALOG_MODE==='demo'?'demo':'bundle');
  if(req.method!=='GET'){res.setHeader('Allow','GET');return send(res,405,{error:'Method not allowed'});}
  try{
   const p=query(req);const q=String(p.q||'').trim().slice(0,100);const genre=GENRES.includes(p.genre)?p.genre:null;

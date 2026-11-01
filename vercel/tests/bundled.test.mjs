@@ -89,3 +89,19 @@ test('relocated serverless catalog works without a runtime JSON file',async()=>{
   await unlink(modulePath).catch(()=>{});await unlink(jsonPath).catch(()=>{});await rmdir(directory);
  }
 });
+
+
+test('an unrelated database setting cannot override the uploaded catalog without explicit opt-in',async()=>{
+ const previousURL=process.env.TURSO_DATABASE_URL,previousMode=process.env.CATALOG_MODE;
+ process.env.TURSO_DATABASE_URL='libsql://not-used.invalid';delete process.env.CATALOG_MODE;
+ try{
+  const result=await api(catalog);assert.equal(result.status,200);assert.equal(result.body.provider,'bot-export');
+  const playable=result.body.movies.find(movie=>movie.id==='4');assert.ok(playable);
+  assert.equal((await api(playback,{id:'4'})).status,200);
+  process.env.CATALOG_MODE='database';
+  assert.equal((await import('../server/bundled.js')).bundledCatalog(),null);
+ }finally{
+  if(previousURL===undefined)delete process.env.TURSO_DATABASE_URL;else process.env.TURSO_DATABASE_URL=previousURL;
+  if(previousMode===undefined)delete process.env.CATALOG_MODE;else process.env.CATALOG_MODE=previousMode;
+ }
+});

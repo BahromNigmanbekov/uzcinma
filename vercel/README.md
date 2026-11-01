@@ -40,7 +40,7 @@ npm run build
 So'ng Vercelda yangilangan fayllarni redeploy qiling. Ushbu eksport yangi uploadlarni internetdagi saytga o'z-o'zidan deploy qilmaydi.
 MP4/WebM/M4V/MOV bilan ishlaydi. Kichik fayllar deployga qo'shiladi; bundlega sig'magan mavjud video lokal /api/local-media endpointidan HTTP Range bilan oqim qilinadi. Bu pleyerga qo'yilgan hajm chegarasi emas. Lokal media endpointi Vercelda ishlamaydi; katta filmlar uchun tashqi ijro manbasi kerak.
 Hozir videoning asl nusxasi mavjud; qo'shimcha 480/720/1080 variantlar uydirilmaydi.
-Turso haqiqiy bazasi sozlansa server o'sha bazaga o'tadi. Eski dizayn demosini alohida ochish uchun CATALOG_MODE=demo ishlating.
+Turso bazasini ishlatish uchun TURSO_DATABASE_URL bilan birga CATALOG_MODE=database ni ham sozlang. Oddiy deploy botdan eksport qilingan katalogdan foydalanadi. Eski dizayn demosini alohida ochish uchun CATALOG_MODE=demo ishlating.
 
 
 HTML, Tailwind CSS, oddiy JavaScript, Swiper va hls.js. React kerak emas.

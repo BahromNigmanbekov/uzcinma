@@ -12,7 +12,7 @@ function catalogSnapshot(){
  }
 }
 export function bundledCatalog(){
- if(process.env.TURSO_DATABASE_URL||process.env.CATALOG_MODE==='demo')return null;
+ if(['database','demo'].includes(process.env.CATALOG_MODE))return null;
  try{
   const {data,hosted}=catalogSnapshot();
   if(data.version!==1||!Array.isArray(data.movies))throw Error('Invalid exported bot catalog');
