@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
+import {mkdtemp,copyFile,unlink,rmdir} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {pathToFileURL} from 'node:url';
 delete process.env.TURSO_DATABASE_URL;delete process.env.CATALOG_MODE;process.env.DEMO_MODE='1';
 const {default:catalog}=await import('../api/catalog.js');
 const {default:playback}=await import('../api/playback.js');
@@ -64,4 +68,24 @@ test('Vercel catalog includes playable hosted films and omits notebook-only stre
    assert.equal((await api(playback,{id:movie.id})).status,404);
   }
  }finally{if(previous===undefined)delete process.env.VERCEL;else process.env.VERCEL=previous;}
+});
+
+
+test('relocated serverless catalog works without a runtime JSON file',async()=>{
+ const directory=await mkdtemp(join(tmpdir(),'uzcinma-catalog-'));
+ const modulePath=join(directory,'bundled.mjs'),jsonPath=join(directory,'bot-catalog.json');
+ const previous=process.env.VERCEL;delete process.env.VERCEL;
+ try{
+  await copyFile(new URL('../server/bundled.js',import.meta.url),modulePath);
+  await copyFile(new URL('../server/bot-catalog.json',import.meta.url),jsonPath);
+  const module=await import(pathToFileURL(modulePath).href);
+  await unlink(jsonPath);
+  const movies=module.bundledCatalog();
+  assert.ok(movies.length>0);
+  assert.ok(movies.every(movie=>movie.sources.every(source=>!source.url.startsWith('/api/local-media'))));
+  assert.doesNotThrow(()=>module.bundledHome(movies));
+ }finally{
+  if(previous===undefined)delete process.env.VERCEL;else process.env.VERCEL=previous;
+  await unlink(modulePath).catch(()=>{});await unlink(jsonPath).catch(()=>{});await rmdir(directory);
+ }
 });
