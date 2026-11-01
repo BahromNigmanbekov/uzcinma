@@ -1,10 +1,10 @@
 import {existsSync} from 'node:fs';
-if(existsSync('.env'))process.loadEnvFile('.env');
+if(existsSync('.env'))process.loadEnvFile('.env');else if(existsSync('../.env'))process.loadEnvFile('../.env');
 const {telegram,publicURL}=await import('../server/core.js');
 const origin=publicURL(process.env.APP_ORIGIN);
 if(!origin||new URL(origin).pathname!=='/'||!process.env.BOT_TOKEN||!/^[A-Za-z0-9_-]{32,256}$/.test(process.env.TELEGRAM_WEBHOOK_SECRET||''))throw Error('Set APP_ORIGIN, BOT_TOKEN and a 32-256 character TELEGRAM_WEBHOOK_SECRET in your private environment.');
 const check=await fetch(new URL('/api/catalog?limit=1',origin),{signal:AbortSignal.timeout(10000)});
 const catalog=await check.json();
-if(!check.ok||catalog.mode!=='live')throw Error('Deploy and configure the real database with DEMO_MODE=0 before connecting the bot.');
+if(!check.ok||catalog.mode!=='live'||catalog.provider!=='telegram-live')throw Error('Deploy and configure the real database with DEMO_MODE=0 before connecting the bot.');
 await telegram('setWebhook',{url:new URL('/api/telegram',origin).href,secret_token:process.env.TELEGRAM_WEBHOOK_SECRET,allowed_updates:['message'],drop_pending_updates:false,max_connections:10});
 console.log('Webhook connected. Stop the old polling bot; Telegram now sends updates to Vercel.');

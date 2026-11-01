@@ -1,26 +1,12 @@
-# Telefon orqali hozir kino korish
+# Telefonda kino ko'rish
 
-GitHubga C:\Users\User\Desktop\uzcinma\vercel papkasining ichidagi loyihani push qiling.
-package.json repozitoriy ildizida tursin.
+1. https://uzcinma.vercel.app ni oching.
+2. Kino kartochkasini tanlang va Tomosha qilish tugmasini bosing.
+3. Yangi kino uchun administrator https://t.me/uzcinma_file_bot ga videoni yuboradi. Caption: birinchi qator nomi, qolgan qatorlar tavsif.
+4. Bot saqlanganini tasdiqlagach sayt katalogi odatda 5?15 soniyada yangilanadi.
 
-Vercel -> Add New -> Project -> GitHub repozitoriyingizni Import qiling.
+Yangi filmlar uchun GitHub push yoki qayta deploy talab qilinmaydi. Botning production webhooki Vercelda ishlaydi; noutbukdagi python bot.py ni ishga tushirish kerak emas.
 
-- Framework Preset: Vite
-- Root Directory: ./
-- Build Command: npm run build
-- Output Directory: dist
-- Node.js: 22.x
-- Environment Variables: bu telefon sinovi uchun hech narsa kerak emas.
-- Deploy ni bosing.
+Telefon playerida ikki marta o'ng/chapga tegish 10 soniya oldinga/orqaga suradi. Boshqaruvlar video o'ynayotganda 10 soniya harakatsizlikdan keyin yashirinadi.
 
-Production .vercel.app havolasini telefonda oching.
-Heros of Envell kartochkasini bosing va Tomosha qilish tugmasini bosing.
-
-public/media va server/bot-catalog.json fayllari GitHubda bolishi kerak.
-node_modules, dist, .env va .private yuklanmaydi; .gitignore ularni ajratadi.
-
-Vercelda faqat sayt bilan birga joylanadigan yoki HTTPS video manbasi bor filmlar chiqadi.
-Noutbukdagi /api/local-media ga bogliq filmlar bu onlayn katalogda korsatilmaydi.
-Bu tayyor video nusxalarini korish uchun versiya. Yangi bot yuklashlarining avtomatik internet sinxronizatsiyasi va onlayn admin hali ulanmagan.
-
-Agar butun uzcinma papkasini repoga joylasangiz, Root Directory ni vercel deb tanlang.
+Agar yangi film chiqmasa, bot javobini va saytni yangilab tekshiring. Video formati va kodeklari telefon brauzeri qo'llaydigan bo'lishi kerak. Player videoning asl sifatini ishlatadi.
