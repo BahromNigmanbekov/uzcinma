@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-11-01T08:59:07.561364+00:00",
+  "generated_at": "2026-11-01T10:39:32.250682+00:00",
   "movies": [
     {
       "id": "5",
@@ -22,8 +22,8 @@
       "media_type": "video/mp4",
       "sources": [
         {
-          "quality": "original",
-          "url": "/api/local-media?id=5"
+          "quality": "hls",
+          "url": "/media/hls-b5cad12b42528361d045ccafaa53e9b5aa5c0e2f2c336aefdbe8ffb77d898430-master.m3u8"
         }
       ]
     },

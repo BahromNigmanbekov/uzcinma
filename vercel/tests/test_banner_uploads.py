@@ -31,4 +31,14 @@ class BannerUploads(unittest.TestCase):
  def test_pending_download_uses_independent_default_artwork(self):
   bot.store_artwork(self.db,4,'banner',{'file_id':'pending','file_unique_id':'pending'})
   item=self.snapshot();self.assertEqual(item['backdrop'],'/assets/uzcinma-banner.png');self.assertEqual(item['poster'],'/assets/uzcinma-poster.png')
+ def test_prepared_hls_source_survives_catalog_export(self):
+  self.snapshot()
+  media=self.project/'public/media';master=media/'hls-test-master.m3u8';master.write_text('#EXTM3U\\n')
+  mapping={'version':1,'movies':{'4':{'cache_key':hashlib.sha256(b'video-unique').hexdigest(),'source_bytes':1,'duration':660,'url':'/media/hls-test-master.m3u8'}}}
+  (self.project/'server/media-sources.json').write_text(__import__('json').dumps(mapping))
+  movie=self.snapshot();self.assertEqual(movie['sources'],[{'quality':'hls','url':'/media/hls-test-master.m3u8'}])
+  mapping['movies']['4']['cache_key']='0'*64
+  (self.project/'server/media-sources.json').write_text(__import__('json').dumps(mapping))
+  movie=self.snapshot();self.assertEqual(movie['sources'][0]['quality'],'original')
+
 if __name__=='__main__':unittest.main()

@@ -18,6 +18,9 @@ def export(database,cache,project):
  finally:connection.close()
  media=project/'public/media';media.mkdir(parents=True,exist_ok=True)
  metadata=project/'server/bot-catalog.json';metadata.parent.mkdir(parents=True,exist_ok=True)
+ prepared={}
+ try:prepared=json.loads((project/'server/media-sources.json').read_text(encoding='utf8')).get('movies',{})
+ except FileNotFoundError:pass
  movies=[];used=set();total=0;ready=0
  for row in rows:
   movie_id=str(row['id']);unique=row.get('file_unique_id') or ''
@@ -26,22 +29,30 @@ def export(database,cache,project):
   cache_key=hashlib.sha256(unique.encode()).hexdigest()
   extension=Path(row.get('file_name') or 'movie.mp4').suffix.lower()
   supported=extension in ('.mp4','.webm','.m4v','.mov')
+  prepared_media={}
   if supported and cached.is_file() and (not row.get('file_size') or cached.stat().st_size==row['file_size']):
-   digest=hashlib.sha256()
-   with cached.open('rb') as stream:
-    for chunk in iter(lambda:stream.read(1024*1024),b''):digest.update(chunk)
-   fingerprint=digest.hexdigest()
-   name='video-'+fingerprint+extension
    size=cached.stat().st_size
-   if name in used or total+size<=MAX_BYTES:
-    destination=media/name
-    if not destination.is_file() or destination.stat().st_size!=size:
-     partial=destination.with_suffix(destination.suffix+'.part')
-     shutil.copyfile(cached,partial);partial.replace(destination)
-    if name not in used:total+=size;used.add(name)
-    source={'quality':'original','url':'/media/'+name};ready+=1
+   item=prepared.get(movie_id,{})
+   url=item.get('url','') if isinstance(item,dict) else ''
+   filename=Path(url).name
+   if item.get('cache_key')==cache_key and item.get('source_bytes')==size and url=='/media/'+filename and filename.startswith('hls-') and filename.endswith('-master.m3u8') and (media/filename).is_file():
+    source={'quality':'hls','url':url};ready+=1;prepared_media=item
    else:
-    source={'quality':'original','url':'/api/local-media?id='+movie_id};ready+=1
+    digest=hashlib.sha256()
+    with cached.open('rb') as stream:
+     for chunk in iter(lambda:stream.read(1024*1024),b''):digest.update(chunk)
+    fingerprint=digest.hexdigest()
+    name='video-'+fingerprint+extension
+    size=cached.stat().st_size
+    if name in used or total+size<=MAX_BYTES:
+     destination=media/name
+     if not destination.is_file() or destination.stat().st_size!=size:
+      partial=destination.with_suffix(destination.suffix+'.part')
+      shutil.copyfile(cached,partial);partial.replace(destination)
+     if name not in used:total+=size;used.add(name)
+     source={'quality':'original','url':'/media/'+name};ready+=1
+    else:
+     source={'quality':'original','url':'/api/local-media?id='+movie_id};ready+=1
   title=str(row.get('title') or 'Video '+movie_id)[:200]
   def uploaded_artwork(kind):
    unique=row.get(kind+'_unique_id') or row.get(kind+'_file_id')
@@ -64,7 +75,7 @@ def export(database,cache,project):
   except (TypeError,ValueError):pass
   movie={'id':movie_id,'title':title,'description':str(row.get('description') or '')[:3000],
    'genres':genres if isinstance(genres,list) else [],'year':row.get('year'),'rating':float(row.get('rating') or 0),
-   'duration':int(row.get('duration') or 0),'type':row.get('type') or 'movie',
+   'duration':int(row.get('duration') or prepared_media.get('duration') or 0),'type':row.get('type') or 'movie',
    'poster':poster_url,'backdrop':banner_url,'available':bool(source),'is_demo':False,
    'origin':'telegram','cache_key':cache_key,'media_type':row.get('mime_type') or 'video/mp4','sources':[source] if source else []}
   movies.append(movie)

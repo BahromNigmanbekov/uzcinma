@@ -13,6 +13,7 @@ export default async function handler(req,res){
    if(!movie)return send(res,404,{error:'Film topilmadi.'});
    if(!movie.sources?.length)return send(res,409,{error:'Bu videoning fayli hali saytga kochirilmagan.'});
    if(process.env.VERCEL&&movie.sources.some(s=>s.url.startsWith('/api/local-media')))return send(res,503,{error:'Bu video uchun tashqi media manbasi hali ulanmagan.'});
+   const hls=movie.sources.find(source=>source.quality==='hls');if(hls)return send(res,200,{kind:'hls',url:hls.url,subtitles:[]});
    return send(res,200,{kind:'files',variants:movie.sources,subtitles:[]});
   }
   if(demoEnabled()&&String(id).startsWith('demo-')){

@@ -1,5 +1,6 @@
 
 @import "tailwindcss";
+@source not "../public/media";
 @source "./*.js";
 @source "../index.html";
 :root{--red:#ff0926;--bg:#0c0c10;--muted:#76767f;--line:#25252b;--gold:#f9c526;color-scheme:dark;font-family:Arial,Helvetica,sans-serif;font-synthesis:none}

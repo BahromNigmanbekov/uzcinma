@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "movies": {
+    "5": {
+      "cache_key": "b5cad12b42528361d045ccafaa53e9b5aa5c0e2f2c336aefdbe8ffb77d898430",
+      "source_bytes": 762700999,
+      "duration": 6734.1,
+      "width": 1280,
+      "height": 544,
+      "kind": "hls",
+      "url": "/media/hls-b5cad12b42528361d045ccafaa53e9b5aa5c0e2f2c336aefdbe8ffb77d898430-master.m3u8"
+    }
+  }
+}

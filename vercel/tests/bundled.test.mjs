@@ -27,6 +27,16 @@ test('exported media is playable and references existing static files or cached 
   const result=await api(playback,{id:movie.id});
   if(!movie.available){assert.equal(result.status,409);continue;}
   assert.equal(result.status,200);
+  if(result.body.kind==='hls'){
+   assert.ok(result.body.url.startsWith('/media/hls-'));
+   const master=new URL('../public'+result.body.url,import.meta.url);assert.ok(existsSync(master));
+   const text=readFileSync(master,'utf8');assert.ok(text.startsWith('#EXTM3U'));
+   const child=text.split(/\r?\n/).find(line=>line&&!line.startsWith('#'));
+   const index=new URL(child,master);assert.ok(existsSync(index));
+   const playlist=readFileSync(index,'utf8');assert.ok(playlist.includes('#EXT-X-ENDLIST'));
+   for(const segment of playlist.split(/\r?\n/).filter(line=>line&&!line.startsWith('#')))assert.ok(existsSync(new URL(segment,index)));
+   references.push(result.body.url);continue;
+  }
   assert.equal(result.body.kind,'files');assert.equal(result.body.variants[0].quality,'original');
   const path=result.body.variants[0].url;
   if(path.startsWith('/media/')){
@@ -62,7 +72,7 @@ test('Vercel catalog includes playable hosted films and omits notebook-only stre
   assert.equal(result.body.total,expected.length);assert.ok(expected.length>0);
   for(const movie of result.body.movies){
    const film=await api(playback,{id:movie.id});assert.equal(film.status,200);
-   assert.ok(film.body.variants.every(source=>!source.url.startsWith('/api/local-media')));
+   assert.ok((film.body.kind==='hls'?[{url:film.body.url}]:film.body.variants).every(source=>!source.url.startsWith('/api/local-media')));
   }
   for(const movie of snapshot.movies.filter(movie=>!expected.some(online=>online.id===movie.id))){
    assert.equal((await api(playback,{id:movie.id})).status,404);

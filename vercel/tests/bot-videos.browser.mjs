@@ -13,10 +13,11 @@ try{
  check(await page.locator('#movie-grid .movie-card').count()===Math.min(12,catalog.total),'uploaded movies appear in the grid');
  check(await page.locator('#demo-player').isHidden(),'demo playback button is hidden');
  for(let i=0;i<Math.min(catalog.total,3);i++){
+  const playback=await(await page.request.get(base+'/api/playback?id='+catalog.movies[i].id)).json();
   await page.locator('#movie-grid .poster-button').nth(i).click();await page.locator('#detail-play').click();
   await page.waitForFunction(()=>document.getElementById('video').currentTime>.5,{},{timeout:15000});
   const video=await page.locator('#video').evaluate(v=>({src:new URL(v.currentSrc).pathname,duration:v.duration,time:v.currentTime,paused:v.paused}));
-  check(video.src.startsWith('/media/video-')&&video.duration>0&&!video.paused,'uploaded video '+catalog.movies[i].id+' really plays');
+  check((playback.kind==='hls'||video.src.startsWith('/media/video-'))&&video.duration>0&&!video.paused,'uploaded video '+catalog.movies[i].id+' really plays');
   await page.locator('#play').click();
  }
  const source=await page.locator('#video').evaluate(v=>new URL(v.currentSrc).pathname);

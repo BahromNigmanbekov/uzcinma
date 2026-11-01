@@ -20,6 +20,11 @@ test('newly uploaded images are served immediately as images without SPA HTML fa
   const part=await fetch(base+'/media/banner-new.jpg',{headers:{Range:'bytes=1-2'}});assert.equal(part.status,206);assert.equal((await part.arrayBuffer()).byteLength,2);
   assert.equal((await fetch(base+'/media/%2E%2E%2Fprivate.txt')).status,404);
   assert.equal((await fetch(base+'/media/banner-missing.jpg')).status,404);
+  writeFileSync(join(directory,'hls-test-master.m3u8'),'#EXTM3U\n#EXTINF:12,\nhls-test-00000.ts\n#EXT-X-ENDLIST\n');
+  writeFileSync(join(directory,'hls-test-00000.ts'),Buffer.alloc(188,71));
+  const playlist=await fetch(base+'/media/hls-test-master.m3u8');
+  assert.equal(playlist.status,200);assert.equal(playlist.headers.get('content-type'),'application/vnd.apple.mpegurl');
+  const segment=await fetch(base+'/media/hls-test-00000.ts');assert.equal(segment.status,200);assert.equal(segment.headers.get('content-type'),'video/mp2t');assert.equal((await segment.arrayBuffer()).byteLength,188);
  }finally{
   await new Promise(resolve=>server.close(resolve));
   if(dirname(directory)===tmpdir()&&basename(directory).startsWith('uzcinma-public-media-'))rmSync(directory,{recursive:true,force:true});

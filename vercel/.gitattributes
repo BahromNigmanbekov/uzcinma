@@ -1,0 +1,3 @@
+public/media/*.ts -text
+public/media/*.mp4 -text
+public/media/*.m3u8 text eol=lf

@@ -25,12 +25,12 @@ export async function streamMediaFile(req,res,path,mime){
  if(req.method==='HEAD'||!size)return res.end();
  const stream=createReadStream(path,{start,end});res.on('close',()=>stream.destroy());stream.on('error',()=>res.destroy());stream.pipe(res);
 }
-const mimeTypes={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',svg:'image/svg+xml',mp4:'video/mp4',m4v:'video/mp4',webm:'video/webm',mov:'video/quicktime'};
+const mimeTypes={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',svg:'image/svg+xml',mp4:'video/mp4',m4v:'video/mp4',webm:'video/webm',mov:'video/quicktime',m3u8:'application/vnd.apple.mpegurl',ts:'video/mp2t'};
 export async function servePublicMedia(req,res,directory){
  let name;
  try{name=decodeURIComponent(new URL(req.url,'http://localhost').pathname.slice('/media/'.length));}
  catch{return unavailable(res,400,'Invalid media name');}
- const match=/^[a-z0-9-]+\.(jpg|jpeg|png|webp|svg|mp4|m4v|webm|mov)$/.exec(name);
+ const match=/^[a-z0-9-]+\.(jpg|jpeg|png|webp|svg|mp4|m4v|webm|mov|m3u8|ts)$/.exec(name);
  if(!match)return unavailable(res,404,'Media topilmadi.');
  return streamMediaFile(req,res,join(directory,name),mimeTypes[match[1]]);
 }
