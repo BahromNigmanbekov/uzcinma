@@ -1,5 +1,6 @@
 import {readFileSync} from 'node:fs';
-import embeddedCatalog from './bot-catalog.json' with {type:'json'};
+import * as embeddedModule from './bot-catalog.json' with {type:'json'};
+const embeddedCatalog=embeddedModule.default||embeddedModule;
 
 function catalogSnapshot(){
  if(process.env.VERCEL)return {data:embeddedCatalog,hosted:true};

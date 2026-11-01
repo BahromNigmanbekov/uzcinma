@@ -2,6 +2,8 @@ import {bundledCatalog,publicBundledMovie,bundledHome} from '../server/bundled.j
 
 import {database,demoEnabled,demoMovies,GENRES,movieDTO,send,fail,query} from '../server/core.js';
 export default async function handler(req,res){
+ res.setHeader('X-Uzcinma-API','embedded-catalog-v2');
+ res.setHeader('X-Uzcinma-Catalog-Mode',process.env.TURSO_DATABASE_URL?'database':process.env.CATALOG_MODE==='demo'?'demo':'bundle');
  if(req.method!=='GET'){res.setHeader('Allow','GET');return send(res,405,{error:'Method not allowed'});}
  try{
   const p=query(req);const q=String(p.q||'').trim().slice(0,100);const genre=GENRES.includes(p.genre)?p.genre:null;
@@ -30,5 +32,5 @@ export default async function handler(req,res){
   const db=database();
   const [rows,count]=await db.batch([{sql:'SELECT m.*,EXISTS(SELECT 1 FROM sources s WHERE s.movie_id=m.id) AS available FROM movies m WHERE '+where+' ORDER BY '+order+' LIMIT ? OFFSET ?',args:[...args,limit,offset]},{sql:'SELECT COUNT(*) AS count FROM movies m WHERE '+where,args}], 'read');
   const total=Number(count.rows[0].count);send(res,200,{mode:'live',movies:rows.rows.map(movieDTO),total,has_more:offset+limit<total},true);
- }catch(error){fail(res,error);}
+ }catch(error){res.setHeader('X-Uzcinma-Error',String(error.code||error.name||'unknown').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,60));fail(res,error);}
 }

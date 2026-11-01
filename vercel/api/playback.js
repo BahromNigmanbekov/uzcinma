@@ -2,6 +2,8 @@ import {bundledCatalog} from '../server/bundled.js';
 
 import {database,demoEnabled,parseId,send,fail,query} from '../server/core.js';
 export default async function handler(req,res){
+ res.setHeader('X-Uzcinma-API','embedded-catalog-v2');
+ res.setHeader('X-Uzcinma-Catalog-Mode',process.env.TURSO_DATABASE_URL?'database':process.env.CATALOG_MODE==='demo'?'demo':'bundle');
  if(req.method!=='GET')return send(res,405,{error:'Method not allowed'});
  try{
   const id=query(req).id;
@@ -24,5 +26,5 @@ export default async function handler(req,res){
   const variants=data.rows.map(r=>({quality:r.quality,url:r.url})).sort((a,b)=>Number(a.quality)-Number(b.quality));
   if(!variants.length)return send(res,409,{error:'Film katalogda bor, lekin video manbasi hali tayyor emas.'});
   send(res,200,{kind:'files',variants,subtitles:[]});
- }catch(error){fail(res,error);}
+ }catch(error){res.setHeader('X-Uzcinma-Error',String(error.code||error.name||'unknown').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,60));fail(res,error);}
 }
