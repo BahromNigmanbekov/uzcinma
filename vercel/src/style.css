@@ -23,3 +23,11 @@ footer{display:flex;justify-content:space-between;gap:24px;align-items:center;co
 .hero-wordmark{position:absolute;z-index:2;right:6%;top:47%;width:34%;text-align:center;font-size:17px;letter-spacing:7px;color:#aaa5;line-height:1.8}.hero-wordmark span{display:block;font-size:10px;letter-spacing:6px;margin-top:12px;color:#aaa4}@media(max-width:850px){.hero-wordmark{display:none}}
 
 .without-hero #header{position:relative;background:var(--bg)}
+
+#hero,#trend-swiper{touch-action:pan-y pinch-zoom;user-select:none;-webkit-user-select:none}
+.hero-slide:after{pointer-events:none}
+#trend-swiper .poster-button img{-webkit-user-drag:none}
+.hero-pagination .swiper-pagination-bullet{height:28px;background:transparent;display:grid;align-items:center}
+.hero-pagination .swiper-pagination-bullet:after{content:"";display:block;height:3px;background:#ffffff25;border-radius:1px}
+.hero-pagination .swiper-pagination-bullet-active:after{background:#ddd}
+.hero-pagination{transform:translateY(12px)}

@@ -6,7 +6,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 import Swiper from 'swiper';
-import {Navigation,Pagination,A11y,Keyboard,EffectFade} from 'swiper/modules';
+import {Navigation,Pagination,A11y,Keyboard,EffectFade,Autoplay} from 'swiper/modules';
 import {icon,putIcon} from './icons.js';
 import {MoviePlayer} from './player.js';
 import {apiURL,normalizeCatalog} from './api-client.js';
@@ -34,7 +34,7 @@ function toggleSave(movie){
 function card(movie){
  const n=el('article','movie-card'),poster=el('div','poster-wrap');
  const open=button('poster-button',null,null,()=>details(movie));open.setAttribute('aria-label',movie.title+' haqida');
- const img=el('img');setImage(img,movie.poster);img.alt=movie.title;img.width=342;img.height=513;img.loading='lazy';img.decoding='async';
+ const img=el('img');setImage(img,movie.poster);img.alt=movie.title;img.draggable=false;img.width=342;img.height=513;img.loading='lazy';img.decoding='async';
  const overlay=el('span','poster-overlay');overlay.innerHTML=icon('play');open.append(img,overlay);poster.append(open);
  const title=el('h3','movie-title',movie.title);title.title=movie.title;
  const meta=el('div','card-meta');meta.append(el('span','year',movie.year||''));
@@ -119,13 +119,15 @@ function heroSlide(movie){
  }
  return slide;
 }
+// Allow dragging from poster buttons while keeping normal taps and keyboard activation.
+const swipeOptions={grabCursor:true,threshold:5,longSwipesRatio:.1,focusableElements:'input, select, option, textarea, video, label'};
 function renderHero(){
  const preferred=['demo-rampage','demo-jurassic','demo-bunny'];
  const films=Array.isArray(state.home?.hero)?state.home.hero:state.mode==='demo'?preferred.map(id=>pool.get(id)).filter(Boolean):[...boot].sort((a,b)=>Number(b.available)-Number(a.available)).slice(0,3);
  $('hero').hidden=Array.isArray(state.home?.hero)&&!films.length;document.body.classList.toggle('without-hero',$('hero').hidden);
  const holder=$('hero-slides');holder.replaceChildren(...films.map(heroSlide));
  if(!films.length)holder.append(heroSlide({title:'Kino olami',description:'Filmlar katalogga qo\'shilgach shu yerda chiqadi.',backdrop:DEFAULT_BANNER,id:'empty',available:false,genres:[]}));
- heroSwiper?.destroy();heroSwiper=new Swiper('#hero',{modules:[Pagination,A11y,Keyboard,EffectFade],effect:'fade',fadeEffect:{crossFade:true},speed:matchMedia('(prefers-reduced-motion: reduce)').matches?0:500,loop:false,keyboard:{enabled:true,onlyInViewport:true},pagination:{el:'.hero-pagination',clickable:true},a11y:{enabled:true,paginationBulletMessage:'{{index}}-filmga o\'tish'}});
+ heroSwiper?.destroy();heroSwiper=new Swiper('#hero',{modules:[Pagination,A11y,Keyboard,EffectFade,Autoplay],...swipeOptions,autoplay:{delay:4000,disableOnInteraction:false,pauseOnMouseEnter:true,enabled:films.length>1},effect:'fade',fadeEffect:{crossFade:true},speed:matchMedia('(prefers-reduced-motion: reduce)').matches?0:500,loop:false,rewind:true,keyboard:{enabled:true,onlyInViewport:true},pagination:{el:'.hero-pagination',clickable:true},a11y:{enabled:true,paginationBulletMessage:'{{index}}-filmga o\'tish'}});
 }
 function renderTrends(){
  let films=boot.filter(m=>m.id!=='demo-bunny'&&(!state.trendGenre||m.genres.includes(state.trendGenre)));
@@ -133,7 +135,7 @@ function renderTrends(){
  if(state.trend==='recent')films=[...films].reverse();
  if(state.trend==='popular'&&state.mode!=='demo')films=[...films].sort((a,b)=>b.rating-a.rating);
  $('trending').replaceChildren(...films.slice(0,18).map(m=>{const slide=el('div','swiper-slide');slide.append(card(m));return slide;}));
- trendSwiper?.destroy();trendSwiper=new Swiper('#trend-swiper',{modules:[Navigation,A11y,Keyboard],slidesPerView:2.2,spaceBetween:16,grabCursor:true,speed:350,breakpoints:{600:{slidesPerView:3.4,spaceBetween:20},850:{slidesPerView:4.4,spaceBetween:25},1100:{slidesPerView:6,spaceBetween:30}},navigation:{prevEl:'#trend-prev',nextEl:'#trend-next'},keyboard:{enabled:true,onlyInViewport:true},a11y:{enabled:true,prevSlideMessage:'Oldingi filmlar',nextSlideMessage:'Keyingi filmlar'}});
+ trendSwiper?.destroy();trendSwiper=new Swiper('#trend-swiper',{modules:[Navigation,A11y,Keyboard,Autoplay],...swipeOptions,rewind:true,autoplay:{delay:4000,disableOnInteraction:false,pauseOnMouseEnter:true,enabled:films.length>1},slidesPerView:2.2,spaceBetween:16,grabCursor:true,speed:350,breakpoints:{600:{slidesPerView:3.4,spaceBetween:20},850:{slidesPerView:4.4,spaceBetween:25},1100:{slidesPerView:6,spaceBetween:30}},navigation:{prevEl:'#trend-prev',nextEl:'#trend-next'},keyboard:{enabled:true,onlyInViewport:true},a11y:{enabled:true,prevSlideMessage:'Oldingi filmlar',nextSlideMessage:'Keyingi filmlar'}});
  updateSaved();
 }
 function demoFiltered(){
