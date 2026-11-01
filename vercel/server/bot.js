@@ -10,9 +10,9 @@ export async function processMessage(db,msg){
   const media=msg.video||msg.document;const name=media.file_name||'Film';
   if(!msg.video&&!String(media.mime_type||'').startsWith('video/')&&!/\.(mp4|mkv|webm|mov|avi)$/i.test(name))return 'Video fayl yuboring.';
   const lines=(msg.caption||'').split('\n');const title=(lines.shift()||name).trim().slice(0,200);const description=lines.join('\n').slice(0,3000);
-  const t=now();await db.execute({sql:'INSERT INTO movies(file_unique_id,file_id,title,description,duration,file_size,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(file_unique_id) DO UPDATE SET file_id=excluded.file_id,updated_at=excluded.updated_at',args:[media.file_unique_id,media.file_id,title,description,media.duration||0,media.file_size||0,t,t]});
+  const t=now();await db.execute({sql:'INSERT INTO movies(file_unique_id,file_id,title,description,duration,file_size,source_chat_id,source_message_id,mime_type,file_name,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(file_unique_id) DO UPDATE SET file_id=excluded.file_id,source_chat_id=excluded.source_chat_id,source_message_id=excluded.source_message_id,mime_type=excluded.mime_type,file_name=excluded.file_name,updated_at=excluded.updated_at',args:[media.file_unique_id,media.file_id,title,description,media.duration||0,media.file_size||0,String(msg.chat.id),Number(msg.message_id)||null,media.mime_type||'video/mp4',name,t,t]});
   const row=await db.execute({sql:'SELECT id FROM movies WHERE file_unique_id=?',args:[media.file_unique_id]});
-  return 'Film katalogga saqlandi. ID: '+row.rows[0].id+'\nTomosha qilish uchun tashqi video/HLS manbasi kerak. /source orqali ulang. Telegram fayli avtomatik video sifatlariga aylantirilmaydi.';
+  return 'Film katalogga saqlandi. ID: '+row.rows[0].id+'\nSaytda kino kartochkasini tanlab tomosha qilishingiz mumkin.';
  }
  if(!['/title','/description','/genre','/source','/delete','/restore','/poster','/banner','/posterurl','/backdrop','/unsource','/meta'].includes(cmd))return 'Buyruqlar: /help';
  let id;try{id=parseId(parts.shift());}catch{return 'Film ID kerak. Masalan: /title 3 Yangi nom';}

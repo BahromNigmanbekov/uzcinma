@@ -13,7 +13,7 @@ const server=createServer(async(req,res)=>{
   if(url.pathname.startsWith('/api/manage/'))return (await admin()).handle(req,res);
   // Resolve new uploads dynamically, independently of Vite's startup public-file cache.
   if(url.pathname.startsWith('/media/'))return servePublicMedia(req,res,fileURLToPath(new URL('../public/media/',import.meta.url)));
-  const allowed=['catalog','playback','telegram','poster','admin','local-media'];
+  const allowed=['catalog','playback','telegram','poster','admin','stream','local-media'];
   const name=url.pathname.slice(5);
   if(!allowed.includes(name)){res.writeHead(404);return res.end();}
   const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>1024*1024){res.writeHead(413);return res.end();}chunks.push(chunk);}

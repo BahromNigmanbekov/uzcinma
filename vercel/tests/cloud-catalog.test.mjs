@@ -1,0 +1,30 @@
+import test,{after} from 'node:test';
+import assert from 'node:assert/strict';
+import {createClient} from '@libsql/client';
+import {initializeCatalog,cloudStatus} from '../server/cloud-admin.js';
+import {processMessage} from '../server/bot.js';
+import {movieDTO} from '../server/core.js';
+import {liveHome} from '../server/live-catalog.js';
+const db=createClient({url:'file::memory:'});
+after(()=>db.close());
+test('import keeps existing film IDs, preserves admin edits and rejects collisions',async()=>{
+ const film={id:6,file_unique_id:'one',file_id:'private',title:'Stranger Things',file_size:219407787,source_message_id:40,source_chat_id:'123',mime_type:'video/mp4'};
+ await initializeCatalog(db,{movies:[film],home:{hero_ids:['6'],recommendation_ids:[]}});
+ assert.equal((await cloudStatus(db)).schema_ready,true);
+ await db.execute("UPDATE movies SET title='Edited title' WHERE id=6");
+ await initializeCatalog(db,{movies:[film]});
+ assert.equal((await db.execute('SELECT title FROM movies WHERE id=6')).rows[0].title,'Edited title');
+ await assert.rejects(()=>initializeCatalog(db,{movies:[{...film,file_unique_id:'different'}]}),error=>error.status===409);
+ assert.equal((await db.execute('SELECT COUNT(*) AS n FROM movies')).rows[0].n,1);
+ assert.equal((await liveHome(db)).hero[0].id,'6');
+});
+test('a new bot video has enough metadata for immediate website playback without a source command',async()=>{
+ process.env.ADMIN_USER_ID='123';process.env.BOT_TOKEN='test-token';process.env.API_ID='12345';process.env.API_HASH='a'.repeat(32);
+ const reply=await processMessage(db,{chat:{id:123,type:'private'},from:{id:123},message_id:41,video:{file_unique_id:'two',file_id:'private-two',mime_type:'video/mp4',file_size:5*1024**3,duration:123},caption:'New film\nDescription'});
+ assert.match(reply,/Saytda kino kartochkasini/);
+ const row=(await db.execute("SELECT *,0 AS available FROM movies WHERE file_unique_id='two'")).rows[0];
+ assert.equal(row.source_message_id,41);assert.equal(row.source_chat_id,'123');assert.equal(movieDTO(row).available,true);
+ const duplicate=await processMessage(db,{chat:{id:123,type:'private'},from:{id:123},message_id:42,video:{file_unique_id:'two',file_id:'refreshed',mime_type:'video/mp4',file_size:5*1024**3},caption:'Duplicate'});
+ assert.match(duplicate,/ID:/);
+ assert.equal((await db.execute("SELECT source_message_id FROM movies WHERE file_unique_id='two'")).rows[0].source_message_id,42);
+});

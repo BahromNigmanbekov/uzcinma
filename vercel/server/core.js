@@ -2,6 +2,7 @@
 import {createClient} from '@libsql/client';
 import {timingSafeEqual} from 'node:crypto';
 import {readFileSync} from 'node:fs';
+export function telegramMediaReady(){return Boolean(process.env.BOT_TOKEN&&/^[1-9]\d*$/.test(process.env.API_ID||'')&&/^[a-f0-9]{32}$/i.test(process.env.API_HASH||''));}
 export const GENRES=['action','adventure','animation','anime','fantasy','drama','horror','comedy','crime','thriller','romance','family','documentary','biography'];
 export const QUALITIES=['hls','480','720','1080','original'];
 let client;
@@ -20,12 +21,12 @@ export function parseId(value){const text=String(value??'');if(!/^[1-9]\d{0,14}$
 export function publicURL(value){
  try{const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password||['localhost','api.telegram.org'].includes(url.hostname)||/^(127\.|10\.|192\.168\.|169\.254\.)/.test(url.hostname))return null;return url.href;}catch{return null;}
 }
-export function send(res,status,data,cache=false){res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control',cache?'public, s-maxage=60, stale-while-revalidate=300':'no-store');res.setHeader('X-Content-Type-Options','nosniff');res.end(JSON.stringify(data));}
+export function send(res,status,data,cache=false){res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control',cache?'public, s-maxage='+(typeof cache==='number'?cache:60)+', stale-while-revalidate='+(typeof cache==='number'?cache:300):'no-store');res.setHeader('X-Content-Type-Options','nosniff');res.end(JSON.stringify(data));}
 export function fail(res,error){send(res,error.status||500,{error:error.status===400?error.message:error.status===503?'Katalog bazasi sozlanmagan.':'Sorovni bajarib bolmadi.'});}
 export function query(req){return req.query||Object.fromEntries(new URL(req.url,'http://localhost').searchParams);}
 export function movieDTO(row){
  let genres;try{genres=JSON.parse(row.genres);}catch{genres=[];}
- return {id:String(row.id),title:row.title,description:row.description,genres,year:row.year,rating:row.rating,duration:row.duration,type:row.type,poster:row.poster_url||(row.poster_file_id?'/api/poster?id='+row.id+'&v='+row.updated_at:'/assets/uzcinma-poster.png'),backdrop:row.backdrop_url||(row.banner_file_id?'/api/poster?id='+row.id+'&kind=banner&v='+row.updated_at:'/assets/uzcinma-banner.png'),available:Boolean(row.available),is_demo:false};
+ return {id:String(row.id),title:row.title,description:row.description,genres,year:row.year,rating:row.rating,duration:row.duration,type:row.type,poster:row.poster_url||(row.poster_file_id?'/api/poster?id='+row.id+'&v='+row.updated_at:'/assets/uzcinma-poster.png'),backdrop:row.backdrop_url||(row.banner_file_id?'/api/poster?id='+row.id+'&kind=banner&v='+row.updated_at:'/assets/uzcinma-banner.png'),available:Boolean(row.available||(telegramMediaReady()&&row.source_message_id&&Number(row.file_size)>0)),is_demo:false};
 }
 export async function telegram(method,data){
  if(!process.env.BOT_TOKEN)throw Error('Bot token not configured');

@@ -16,7 +16,7 @@ const server=createServer(async(req,res)=>{
   if(url.pathname.startsWith('/api/manage/'))return (await admin()).handle(req,res);
   if(url.pathname.startsWith('/media/')){res.setHeader('Access-Control-Allow-Origin','*');return servePublicMedia(req,res,resolve(project,'public/media'));}
   if(url.pathname.startsWith('/api/')){
-   const name=url.pathname.slice(5);if(!['catalog','playback','poster','telegram','admin','local-media'].includes(name)){res.statusCode=404;return res.end();}
+   const name=url.pathname.slice(5);if(!['catalog','playback','poster','telegram','admin','stream','local-media'].includes(name)){res.statusCode=404;return res.end();}
    if(['GET','HEAD'].includes(req.method))res.setHeader('Access-Control-Allow-Origin','*');
    req.query=Object.fromEntries(url.searchParams);let size=0;const chunks=[];
    for await(const chunk of req){size+=chunk.length;if(size>1024*1024){res.statusCode=413;return res.end();}chunks.push(chunk);}

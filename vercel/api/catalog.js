@@ -1,3 +1,4 @@
+import {liveHome} from '../server/live-catalog.js';
 import {bundledCatalog,publicBundledMovie,bundledHome} from '../server/bundled.js';
 
 import {database,demoEnabled,demoMovies,GENRES,movieDTO,send,fail,query} from '../server/core.js';
@@ -31,6 +32,6 @@ export default async function handler(req,res){
   const order={latest:'m.created_at DESC,m.id DESC',rating:'m.rating DESC,m.id DESC',year:'m.year DESC,m.id DESC',year_asc:'m.year ASC,m.id ASC',title_desc:'m.title DESC,m.id DESC',title:'m.title ASC,m.id ASC'}[sort];
   const db=database();
   const [rows,count]=await db.batch([{sql:'SELECT m.*,EXISTS(SELECT 1 FROM sources s WHERE s.movie_id=m.id) AS available FROM movies m WHERE '+where+' ORDER BY '+order+' LIMIT ? OFFSET ?',args:[...args,limit,offset]},{sql:'SELECT COUNT(*) AS count FROM movies m WHERE '+where,args}], 'read');
-  const total=Number(count.rows[0].count);send(res,200,{mode:'live',movies:rows.rows.map(movieDTO),total,has_more:offset+limit<total},true);
+  const total=Number(count.rows[0].count);send(res,200,{mode:'live',provider:'telegram-live',home:await liveHome(db),movies:rows.rows.map(movieDTO),total,has_more:offset+limit<total},5);
  }catch(error){res.setHeader('X-Uzcinma-Error',String(error.code||error.name||'unknown').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,60));fail(res,error);}
 }

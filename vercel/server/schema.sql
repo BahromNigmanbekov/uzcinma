@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS movies (
  rating REAL NOT NULL DEFAULT 0,
  duration INTEGER NOT NULL DEFAULT 0,
  file_size INTEGER NOT NULL DEFAULT 0,
+ source_chat_id TEXT,
+ source_message_id INTEGER,
+ mime_type TEXT,
+ file_name TEXT,
  poster_file_id TEXT,
  banner_file_id TEXT,
  poster_url TEXT,
@@ -33,3 +37,5 @@ CREATE TABLE IF NOT EXISTS telegram_updates (
  lease_until INTEGER NOT NULL DEFAULT 0,
  completed_at INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY,value TEXT NOT NULL);
