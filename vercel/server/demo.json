@@ -1,0 +1,392 @@
+[
+  {
+    "id": "demo-pacific",
+    "title": "Pacific Rim 2: Uprising",
+    "year": 2018,
+    "rating": 5.8,
+    "genres": [
+      "action",
+      "fantasy"
+    ],
+    "type": "movie",
+    "poster": "/assets/pacific.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-solo",
+    "title": "Star Wars: Solo",
+    "year": 2018,
+    "rating": 7.2,
+    "genres": [
+      "action",
+      "fantasy"
+    ],
+    "type": "movie",
+    "poster": "/assets/solo.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-sparrow",
+    "title": "Red Sparrow",
+    "year": 2018,
+    "rating": 6.9,
+    "genres": [
+      "drama",
+      "thriller"
+    ],
+    "type": "movie",
+    "poster": "/assets/sparrow.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-tomb",
+    "title": "Tomb Raider",
+    "year": 2018,
+    "rating": 6.2,
+    "genres": [
+      "action",
+      "adventure"
+    ],
+    "type": "movie",
+    "poster": "/assets/tomb.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-samaritan",
+    "title": "Bad Samaritan",
+    "year": 2018,
+    "rating": 6.3,
+    "genres": [
+      "thriller",
+      "horror"
+    ],
+    "type": "movie",
+    "poster": "/assets/samaritan.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-jurassic",
+    "title": "Jurassic World: Fallen Kingdom",
+    "year": 2018,
+    "rating": 8.3,
+    "genres": [
+      "action",
+      "fantasy"
+    ],
+    "type": "movie",
+    "poster": "/assets/jurassic.webp",
+    "backdrop": "/assets/jurassic-landscape.webp",
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-deadpool",
+    "title": "Deadpool 2",
+    "year": 2018,
+    "rating": 8.1,
+    "genres": [
+      "action",
+      "comedy"
+    ],
+    "type": "movie",
+    "poster": "/assets/deadpool.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-meg",
+    "title": "The Meg",
+    "year": 2018,
+    "rating": 6.4,
+    "genres": [
+      "action",
+      "horror"
+    ],
+    "type": "movie",
+    "poster": "/assets/meg.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-october",
+    "title": "October",
+    "year": 2018,
+    "rating": 8,
+    "genres": [
+      "drama",
+      "romance"
+    ],
+    "type": "movie",
+    "poster": "/assets/october.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-incredibles",
+    "title": "Incredibles 2",
+    "year": 2018,
+    "rating": 7.7,
+    "genres": [
+      "animation",
+      "comedy"
+    ],
+    "type": "animation",
+    "poster": "/assets/incredibles.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-paris",
+    "title": "The 15:17 to Paris",
+    "year": 2018,
+    "rating": 5.3,
+    "genres": [
+      "drama",
+      "biography"
+    ],
+    "type": "movie",
+    "poster": "/assets/paris.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-rampage",
+    "title": "Rampage",
+    "year": 2018,
+    "rating": 6.5,
+    "genres": [
+      "action",
+      "fantasy"
+    ],
+    "type": "movie",
+    "poster": "/assets/rampage.webp",
+    "backdrop": "/assets/hero.webp",
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-maze",
+    "title": "Maze Runner: Death Cure",
+    "year": 2018,
+    "rating": 6.3,
+    "genres": [
+      "action",
+      "fantasy"
+    ],
+    "type": "movie",
+    "poster": "/assets/maze.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-purge",
+    "title": "The First Purge",
+    "year": 2018,
+    "rating": 5.1,
+    "genres": [
+      "horror",
+      "thriller"
+    ],
+    "type": "movie",
+    "poster": "/assets/purge.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-robin",
+    "title": "Christopher Robin",
+    "year": 2018,
+    "rating": 7.3,
+    "genres": [
+      "animation",
+      "family"
+    ],
+    "type": "animation",
+    "poster": "/assets/robin.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-venom",
+    "title": "Venom",
+    "year": 2018,
+    "rating": 7.2,
+    "genres": [
+      "action",
+      "fantasy"
+    ],
+    "type": "movie",
+    "poster": "/assets/venom.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-rabbit",
+    "title": "Peter Rabbit",
+    "year": 2018,
+    "rating": 6.6,
+    "genres": [
+      "animation",
+      "family"
+    ],
+    "type": "animation",
+    "poster": "/assets/rabbit.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-mute",
+    "title": "Mute",
+    "year": 2018,
+    "rating": 5.4,
+    "genres": [
+      "thriller",
+      "fantasy"
+    ],
+    "type": "movie",
+    "poster": "/assets/mute.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-party",
+    "title": "Life of the Party",
+    "year": 2018,
+    "rating": 5.5,
+    "genres": [
+      "comedy"
+    ],
+    "type": "movie",
+    "poster": "/assets/party.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-antman",
+    "title": "Ant-Man and the Wasp",
+    "year": 2018,
+    "rating": 6.9,
+    "genres": [
+      "action",
+      "fantasy"
+    ],
+    "type": "movie",
+    "poster": "/assets/antman.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-sicario",
+    "title": "Sicario: Day of the Soldado",
+    "year": 2018,
+    "rating": 7,
+    "genres": [
+      "action",
+      "crime"
+    ],
+    "type": "movie",
+    "poster": "/assets/sicario.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-commuter",
+    "title": "The Commuter",
+    "year": 2018,
+    "rating": 6.3,
+    "genres": [
+      "action",
+      "thriller"
+    ],
+    "type": "movie",
+    "poster": "/assets/commuter.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  },
+  {
+    "id": "demo-mission",
+    "title": "Mission: Impossible Fallout",
+    "year": 2018,
+    "rating": 7.6,
+    "genres": [
+      "action",
+      "adventure"
+    ],
+    "type": "movie",
+    "poster": "/assets/mission.webp",
+    "backdrop": null,
+    "description": "Rasmdagi katalog korinishi uchun namuna. Bu filmning tomosha manbasi hali ulanmagan.",
+    "duration": 6420,
+    "is_demo": true,
+    "available": false
+  }
+]

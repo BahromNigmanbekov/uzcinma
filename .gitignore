@@ -1,0 +1,10 @@
+.env
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+__pycache__/
+
+.site-cache/
+.site-static-backup/
+.worker-starter/
+*.tar.gz

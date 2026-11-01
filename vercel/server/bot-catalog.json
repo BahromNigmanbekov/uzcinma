@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "generated_at": "2026-11-01T08:59:07.561364+00:00",
+  "movies": [
+    {
+      "id": "5",
+      "title": "The Incredible Hulk",
+      "description": "Qisqacha: Ilmiy tajriba natijasida Bruce Banner gamma nurlari ta’sirida g‘azablanganda ulkan yashil maxluqqa — Halkka aylanadi. U hukumatdan yashirinadi, ammo yangi, undan ham xavfli dushman — Abomination paydo bo‘lgach, o‘z kuchini insoniyatni himoya qilish uchun ishlatishga majbur bo‘ladi.",
+      "genres": [
+        "fantasy"
+      ],
+      "year": 2008,
+      "rating": 6.6,
+      "duration": 6735,
+      "type": "movie",
+      "poster": "/media/poster-3242ca99d5a801d4122534525d5484aaec1adcaca246bb2524695ee3e0c75e04.jpg",
+      "backdrop": "/media/banner-d066293fe3ce4e8e7c4d1cd1d1842a0e7a5fc3556e45d579ba837e32ed4f399c.jpg",
+      "available": true,
+      "is_demo": false,
+      "origin": "telegram",
+      "cache_key": "b5cad12b42528361d045ccafaa53e9b5aa5c0e2f2c336aefdbe8ffb77d898430",
+      "media_type": "video/mp4",
+      "sources": [
+        {
+          "quality": "original",
+          "url": "/api/local-media?id=5"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "Heros of Envell",
+      "description": "“Heroes of Envell” — sarguzasht, fantastika va sirli voqealarga boy animatsion serial. Hikoya to‘rt nafar do‘stning sehrli kompyuter o‘yini olamiga tushib qolishi bilan boshlanadi. Ular turli xavf-xatarlar, kuchli dushmanlar va murakkab sinovlarga duch kelishadi. Do‘stlar o‘zlarining aql-zakovati, jasorati va jamoaviy harakati yordamida qiyinchiliklarni yengib, sirli olamning jumboqlarini ochishga harakat qilishadi.",
+      "genres": [
+        "action",
+        "animation"
+      ],
+      "year": 2010,
+      "rating": 5.5,
+      "duration": 660,
+      "type": "series",
+      "poster": "/media/poster-2ce81d1a1080eb9afa7b5a64acbdcfcc5272f33b3ac33f9f50ce28dc72e5e9ce.jpg",
+      "backdrop": "/media/banner-4f6c1c42c50d756b574d28d7d12e10dee81779327e1080e74c8076b339bd9ca1.jpg",
+      "available": true,
+      "is_demo": false,
+      "origin": "telegram",
+      "cache_key": "92f533159f42bff715e8c7083aff02958e33466ba13f26cf1be124e2e9e42306",
+      "media_type": "video/mp4",
+      "sources": [
+        {
+          "quality": "original",
+          "url": "/media/video-1898138bc26fb886c916d8d904711660d7546934f4a21fed669b194e7da28505.mp4"
+        }
+      ]
+    }
+  ],
+  "home": {}
+}

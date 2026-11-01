@@ -1,0 +1,1 @@
+export default function handler(req,res){res.statusCode=503;res.setHeader('Content-Type','application/json');res.end(JSON.stringify({error:'Admin API Vercel uchun hali ulanmagan. Hozir mahalliy admin paneldan foydalaning.'}));}
