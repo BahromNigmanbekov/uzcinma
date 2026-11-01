@@ -56,7 +56,12 @@ try{
  const phoneBounds=await mobile.locator('#player').boundingBox();
  await mobile.touchscreen.tap(phoneBounds.x+phoneBounds.width*.5,phoneBounds.y+phoneBounds.height*.45);
  await mobile.clock.fastForward(400);
- check(await visible(mobile)&&await mobile.locator('#video').evaluate(v=>!v.paused),'phone tap reveals controls without pausing');
+ check(await visible(mobile)&&await mobile.locator('#video').evaluate(v=>v.paused),'phone tap pauses playback and reveals controls');
+ await mobile.clock.fastForward(10_100);
+ check(await visible(mobile),'paused phone playback keeps controls visible');
+ await mobile.touchscreen.tap(phoneBounds.x+phoneBounds.width*.75,phoneBounds.y+phoneBounds.height*.45);await mobile.clock.fastForward(400);
+ await mobile.waitForFunction(()=>!document.getElementById('video').paused);
+ check(await visible(mobile),'a second single phone tap resumes playback');
  await mobile.clock.fastForward(10_100);
  check(await hidden(mobile),'phone controls hide again when unused');
  await context.close();

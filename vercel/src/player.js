@@ -31,17 +31,20 @@ export class MoviePlayer {
   this.video.addEventListener('durationchange',()=>this.updateTime());
   this.video.addEventListener('progress',()=>this.updateBuffer());
   this.video.addEventListener('volumechange',()=>{putIcon('mute',this.video.muted||this.video.volume===0?'muted':'volume');$('mute').setAttribute('aria-label',this.video.muted?'Ovozni yoqish':"Ovozni o'chirish");$('volume').value=this.video.muted?0:this.video.volume;});
-  this.video.addEventListener('playing',()=>{const resumed=this.root.classList.contains('playing');this.root.classList.add('playing');this.root.classList.remove('loading');putIcon('play','pause');$('play').setAttribute('aria-label',"To'xtatish");this.message('');if(!resumed)this.showControls();});
-  this.video.addEventListener('pause',()=>{this.root.classList.remove('playing');this.showControls();putIcon('play','play');$('play').setAttribute('aria-label','Ijro qilish');this.savePosition(true);});
-  this.video.addEventListener('waiting',()=>{this.root.classList.add('loading');this.message('Video yuklanmoqda...');});
-  this.video.addEventListener('canplay',()=>{this.root.classList.remove('loading');this.message('');});
-  this.video.addEventListener('ended',()=>{clearTimeout(this.hideTimer);this.root.classList.remove('playing','controls-hidden');this.resumeTime=0;try{localStorage.removeItem('uzcinma-time-'+this.movie.id);}catch{}});
-  this.video.addEventListener('error',()=>{if(this.loaded&&!this.hls)this.message('Videoni ochib bolmadi. Manbani tekshiring yoki boshqa sifatni tanlang.');});
+  this.video.addEventListener('playing',()=>{const resumed=this.root.classList.contains('playing');this.root.classList.add('playing');this.loading(false);putIcon('play','pause');$('play').setAttribute('aria-label',"To'xtatish");this.message('');if(!resumed)this.showControls();});
+  this.video.addEventListener('pause',()=>{this.loading(false);this.root.classList.remove('playing');this.showControls();putIcon('play','play');$('play').setAttribute('aria-label','Ijro qilish');this.savePosition(true);});
+  this.video.addEventListener('waiting',()=>{if(!this.video.paused&&!this.video.ended){this.loading(true);this.message('');}});
+  this.video.addEventListener('seeking',()=>{if(!this.video.paused)this.loading(true);});
+  this.video.addEventListener('seeked',()=>{if(this.video.paused||this.video.readyState>=3)this.loading(false);});
+  this.video.addEventListener('canplay',()=>{this.loading(false);this.message('');});
+  this.video.addEventListener('ended',()=>{this.loading(false);clearTimeout(this.hideTimer);this.root.classList.remove('playing','controls-hidden');this.resumeTime=0;try{localStorage.removeItem('uzcinma-time-'+this.movie.id);}catch{}});
+  this.video.addEventListener('error',()=>{if(this.loaded&&!this.hls){this.loading(false);this.message('Videoni ochib bolmadi. Manbani tekshiring yoki boshqa sifatni tanlang.');}});
   this.video.addEventListener('loadedmetadata',()=>{if(this.resumeTime>0){this.video.currentTime=clampTime(this.resumeTime,this.video.duration);this.resumeTime=0;}this.updateTime();this.updateCaptions();});
   this.video.textTracks.addEventListener?.('addtrack',()=>this.updateCaptions());
-  this.root.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||e.pointerType==='pen')this.showControls();});
+  this.root.addEventListener('pointermove',e=>{if(this.tapStart&&Math.hypot(e.clientX-this.tapStart.x,e.clientY-this.tapStart.y)>12)this.tapStart=null;if(e.pointerType==='mouse'||e.pointerType==='pen')this.showControls();});
   this.root.addEventListener('pointerdown',e=>{
    this.showControls();
+   this.tapStart=e.isPrimary&&!e.target.closest('button,input,select,.player-controls')?{id:e.pointerId,x:e.clientX,y:e.clientY,time:performance.now()}:null;
    if(e.target.closest('.player-controls'))this.controlPointers.add(e.pointerId);
   });
   const releaseControls=e=>{
@@ -64,10 +67,12 @@ export class MoviePlayer {
    if(action==='toggle')this.toggle();else if(action==='forward')this.seek(10);else if(action==='rewind')this.seek(-10);else if(action==='mute')this.video.muted=!this.video.muted;else this.fullscreen();
   });
   this.root.addEventListener('pointerup',e=>this.gesture(e));
+  this.root.addEventListener('pointercancel',()=>{this.tapStart=null;});
   document.addEventListener('pointerdown',e=>{if(!$('settings-panel').hidden&&!e.target.closest('.settings-wrap'))this.settings(false);});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)this.savePosition(true);});
   window.addEventListener('pagehide',()=>this.savePosition(true));
  }
+ loading(active){this.root.classList.toggle('loading',active);this.root.setAttribute('aria-busy',String(active));$('player-loading').hidden=!active;}
  message(text){$('player-message').textContent=text;}
  settings(open){$('settings-panel').hidden=!open;$('settings-toggle').setAttribute('aria-expanded',String(open));this.showControls();}
  showControls(){
@@ -85,12 +90,13 @@ export class MoviePlayer {
   this.scrubbing=false;this.updateTime();this.showControls();
  }
  gesture(e){
-  if(e.target.closest('button,input,select,.player-controls')||!e.isPrimary)return;
+  const start=this.tapStart;this.tapStart=null;
+  if(!start||start.id!==e.pointerId||Math.hypot(e.clientX-start.x,e.clientY-start.y)>12||performance.now()-start.time>700||e.target.closest('button,input,select,.player-controls')||!e.isPrimary)return;
   const rect=this.root.getBoundingClientRect(),tap={time:performance.now(),x:e.clientX-rect.left,y:e.clientY-rect.top};
   const jump=doubleTap(this.lastTap,tap,rect.width);
   if(jump){clearTimeout(this.tapTimer);this.lastTap=null;this.seek(jump);return;}
   this.lastTap=tap;clearTimeout(this.tapTimer);
-  this.tapTimer=setTimeout(()=>{this.lastTap=null;if(e.pointerType==='mouse')this.toggle();else if(this.video.paused)this.toggle();else this.showControls();},330);
+  this.tapTimer=setTimeout(()=>{this.lastTap=null;this.toggle();},330);
  }
  seek(delta){
   if(!this.loaded||!Number.isFinite(this.video.duration))return;
@@ -124,6 +130,7 @@ export class MoviePlayer {
   try{if(document.fullscreenElement)await document.exitFullscreen();else if(this.root.requestFullscreen)await this.root.requestFullscreen();else if(this.video.webkitEnterFullscreen)this.video.webkitEnterFullscreen();else this.message("Bu qurilmada to'liq ekran qo'llanmaydi.");}catch{this.message("To'liq ekran ochilmadi.");}
  }
  reset(){
+  clearTimeout(this.tapTimer);this.lastTap=null;this.tapStart=null;this.loading(false);
   this.controlPointers.clear();this.scrubbing=false;clearTimeout(this.hideTimer);this.savePosition(true);this.generation++;this.controller?.abort();this.hls?.destroy();this.hls=null;this.video.pause();this.video.removeAttribute('src');this.video.load();
   this.loaded=false;this.root.classList.remove('playing','loading','controls-hidden');this.message('');this.updateTime();this.settings(false);this.choices([{value:'auto',label:'Avtomatik'}]);this.recoveries=0;
  }
@@ -136,7 +143,7 @@ export class MoviePlayer {
   setVideoPoster(this.video,movie.backdrop);
   if(!movie.available){this.message("Bu filmga video manbasi hali ulanmagan. 'Pleyer sinovi' orqali boshqaruvni tekshiring.");this.onError('Filmning video manbasi hali ulanmagan.');return;}
   const generation=this.generation;this.controller=new AbortController();
-  this.root.classList.add('loading');this.message('Video tayyorlanmoqda...');
+  this.loading(true);this.message('');
   try{
    const response=await fetch(apiURL('/api/playback?id='+encodeURIComponent(movie.id)),{signal:this.controller.signal});
    const data=await response.json();if(!response.ok)throw Error(data.error||'Video manbasi ochilmadi.');
@@ -149,7 +156,7 @@ export class MoviePlayer {
     this.quality=sources[0].quality;this.choices(sources.map(s=>({value:s.quality,label:s.quality==='original'?'Asl sifat':s.quality+'p'})),this.quality);
     this.video.src=sources[0].url;this.loaded=true;if(play)await this.play();
    }
-  }catch(error){if(generation!==this.generation||error.name==='AbortError')return;this.root.classList.remove('loading');this.message(error.message);this.onError(error.message);}
+  }catch(error){if(generation!==this.generation||error.name==='AbortError')return;this.loading(false);this.message(error.message);this.onError(error.message);}
  }
  async attachHLS(url,generation,play){
   const {default:Hls}=await import('hls.js');if(generation!==this.generation)return;
@@ -166,9 +173,9 @@ export class MoviePlayer {
    });
    hls.on(Hls.Events.ERROR,(_,data)=>{
     if(generation!==this.generation||!data.fatal)return;
-    if(this.recoveries++<2&&data.type===Hls.ErrorTypes.NETWORK_ERROR){this.message('Video ulanishi tiklanmoqda...');hls.startLoad();}
-    else if(this.recoveries<=2&&data.type===Hls.ErrorTypes.MEDIA_ERROR)hls.recoverMediaError();
-    else{hls.destroy();this.hls=null;this.loaded=false;this.root.classList.remove('loading');this.message('Video yuklanmadi. Tarmoq yoki HLS manbasini tekshiring.');}
+    if(this.recoveries++<2&&data.type===Hls.ErrorTypes.NETWORK_ERROR){this.loading(true);this.message('');hls.startLoad();}
+    else if(this.recoveries<=2&&data.type===Hls.ErrorTypes.MEDIA_ERROR){this.loading(true);this.message('');hls.recoverMediaError();}
+    else{hls.destroy();this.hls=null;this.loaded=false;this.loading(false);this.message('Video yuklanmadi. Tarmoq yoki HLS manbasini tekshiring.');}
    });
    hls.loadSource(url);hls.attachMedia(this.video);
   }else if(this.video.canPlayType('application/vnd.apple.mpegurl')){
@@ -184,7 +191,7 @@ export class MoviePlayer {
   if(playing)await this.play();
  }
  async play(){
-  try{await this.video.play();}catch(error){this.root.classList.remove('loading');if(error.name==='NotAllowedError')this.message('Videoni boshlash uchun ijro tugmasini bosing.');else if(error.name!=='AbortError')this.message('Videoni ijro qilib bolmadi. Manbani tekshiring.');}
+  try{await this.video.play();}catch(error){this.loading(false);if(error.name==='NotAllowedError')this.message('Videoni boshlash uchun ijro tugmasini bosing.');else if(error.name!=='AbortError')this.message('Videoni ijro qilib bolmadi. Manbani tekshiring.');}
  }
  async toggle(){this.showControls();if(!this.loaded)await this.load(this.movie);else if(this.video.paused)await this.play();else this.video.pause();}
 }

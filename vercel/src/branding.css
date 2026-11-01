@@ -1,7 +1,7 @@
-/* Show the supplied wordmark by framing the center of its original banner. */
+/* Frame the supplied logo without changing the original image. */
 .brand-image{position:relative;display:inline-block;width:156px;aspect-ratio:5.25;overflow:hidden;flex-shrink:0;vertical-align:middle;line-height:0;mix-blend-mode:screen}
 .brand .brand-image{margin:0;letter-spacing:normal}
-.brand-image img{display:block;position:absolute;left:50%;top:50%;width:370%;max-width:none;height:auto;transform:translate(-50%,-50%)}
+.brand-image img{display:block;position:absolute;left:50%;top:50%;width:150%;max-width:none;height:auto;transform:translate(-50%,-50%)}
 footer .brand-image{width:128px}
 .auth-screen .brand-image{width:190px}
 .sidebar .brand-image{width:170px}

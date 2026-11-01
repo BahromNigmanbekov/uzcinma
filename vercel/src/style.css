@@ -31,3 +31,10 @@ footer{display:flex;justify-content:space-between;gap:24px;align-items:center;co
 .hero-pagination .swiper-pagination-bullet:after{content:"";display:block;height:3px;background:#ffffff25;border-radius:1px}
 .hero-pagination .swiper-pagination-bullet-active:after{background:#ddd}
 .hero-pagination{transform:translateY(12px)}
+
+.player-loading{position:absolute;inset:0;z-index:6;display:grid;place-items:center;pointer-events:none}
+.loading-spinner{width:46px;height:46px;border:3px solid #ffffff26;border-top-color:var(--red);border-right-color:var(--red);border-radius:50%;animation:player-loading-spin .8s linear infinite;box-shadow:0 0 24px #0008}
+.player.loading .big-play{visibility:hidden}
+@keyframes player-loading-spin{to{transform:rotate(360deg)}}
+@media(max-width:600px){.loading-spinner{width:36px;height:36px}}
+@media(prefers-reduced-motion:reduce){.loading-spinner{animation-duration:2s}}
