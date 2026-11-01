@@ -20,6 +20,7 @@ Vercel production Environment Variables:
 - API_ID va API_HASH ? my.telegram.org/apps dagi Telegram ilovasi.
 - TELEGRAM_WEBHOOK_SECRET ? Telegram webhook autentifikatsiyasi.
 - ADMIN_API_SECRET ? himoyalangan sozlash/import API kaliti.
+- ADMIN_PASSWORD_HASH ? admin parolining scrypt xeshi, JSON ichida salt va hash. Server uchun maxfiy sozlama.
 - APP_ORIGIN=https://uzcinma.vercel.app
 - CATALOG_MODE=database
 - DEMO_MODE=0
@@ -61,7 +62,9 @@ npm run dev
 
 Sayt: http://localhost:5176. Lokal admin: http://localhost:5176/admin/.
 
-Lokal admin eski movies.sqlite3 bilan ishlaydi; uning Vercel /api/manage API-si hali ulanmagan. Productiondagi kino boshqaruvi hozir bot buyruqlari orqali bajariladi. [Lokal admin qo'llanmasi](ADMIN.md).
+Internetdagi admin: https://uzcinma.vercel.app/admin/. U /api/manage orqali jonli Turso bazasida nom, kategoriya, banner/poster, bosh sahifa tanlovi va o'chirish/tiklashni boshqaradi. Videolar bevosita botga yuboriladi. Kirish sessiyalari va rasm yuklash holatlari bazada saqlanadi.
+
+Lokal admin eski movies.sqlite3 bilan ishlaydi; internetdagi katalogni boshqarish uchun internetdagi panelga kiring. [Admin qo'llanmasi](ADMIN.md).
 
 ## Tekshiruv
 

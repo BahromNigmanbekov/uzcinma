@@ -5,7 +5,7 @@ import {stat} from 'node:fs/promises';
 import {randomBytes} from 'node:crypto';
 import {Readable} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
-export async function uploadToTelegram({base,token,chatId,kind,path,filename,mime,caption,progress=()=>{},signal}){
+export async function uploadToTelegram({base,token,chatId,kind,path,data,filename,mime,caption,progress=()=>{},signal}){
  const video=kind==='video'&&/\.(mp4|m4v)$/i.test(filename);
  const method=kind==='video'?(video?'sendVideo':'sendDocument'):'sendPhoto',field=kind==='video'?(video?'video':'document'):'photo';
  const boundary='uzcinma-'+randomBytes(18).toString('hex');
@@ -13,7 +13,7 @@ export async function uploadToTelegram({base,token,chatId,kind,path,filename,mim
  const lead=Object.entries(fields).map(([key,value])=>'--'+boundary+'\r\nContent-Disposition: form-data; name="'+key+'"\r\n\r\n'+value+'\r\n').join('');
  const safeName=filename.replace(/[\r\n"\\]/g,'_').slice(0,150)||'upload.bin';
  const before=Buffer.from(lead+'--'+boundary+'\r\nContent-Disposition: form-data; name="'+field+'"; filename="'+safeName+'"\r\nContent-Type: '+mime+'\r\n\r\n');
- const after=Buffer.from('\r\n--'+boundary+'--\r\n');const size=(await stat(path)).size;
+ const after=Buffer.from('\r\n--'+boundary+'--\r\n');const size=data?data.length:(await stat(path)).size;
  const url=new URL(base.replace(/\/$/,'')+'/bot'+token+'/'+method);
  if(!['https:','http:'].includes(url.protocol))throw Error('Bot API manzili notogri.');
  return new Promise((resolve,reject)=>{
@@ -34,7 +34,7 @@ export async function uploadToTelegram({base,token,chatId,kind,path,filename,mim
   request.on('error',error=>reject(Error(error.name==='AbortError'?'Yuklash toxtatildi.':'Telegram bilan ulanish uzildi. Qayta urinib koring.')));
   async function* body(){
    yield before;let sent=0;
-   for await(const chunk of createReadStream(path)){sent+=chunk.length;progress(sent,size);yield chunk;}
+   for await(const chunk of (data?Readable.from((function*(){for(let offset=0;offset<data.length;offset+=65536)yield data.subarray(offset,offset+65536);})()):createReadStream(path))){sent+=chunk.length;progress(sent,size);yield chunk;}
    yield after;
   }
   pipeline(Readable.from(body()),request,{signal}).catch(()=>reject(Error('Faylni Telegramga uzatib bolmadi.')));

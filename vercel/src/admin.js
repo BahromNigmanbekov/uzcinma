@@ -1,3 +1,4 @@
+import {prepareAdminImage} from './admin-images.js';
 import './admin.css';
 import './branding.css';
 import {setImage} from './artwork.js';
@@ -163,6 +164,7 @@ async function waitJob(jobId){
 }
 
 async function sendFile(job,file){
+ file=await prepareAdminImage(file,job.kind);
  await new Promise((resolve,reject)=>{
   const xhr=new XMLHttpRequest(),live={xhr,loaded:0};xhrUploads.set(job.id,live);
   xhr.open('PUT','/api/manage/jobs/'+job.id+'/file');xhr.withCredentials=true;xhr.setRequestHeader('X-CSRF-Token',csrf);xhr.setRequestHeader('Content-Type','application/octet-stream');
@@ -172,6 +174,7 @@ async function sendFile(job,file){
  });
 }
 async function uploadFile(kind,file,movieId,metadata){
+ file=await prepareAdminImage(file,kind);
  const {job}=await api('/jobs',{method:'POST',body:{kind,filename:file.name,size:file.size,mime:file.type,movie_id:movieId,metadata}});
  jobs.set(job.id,job);renderJob(job);page('uploads');
  try{await sendFile(job,file);return await waitJob(job.id);}

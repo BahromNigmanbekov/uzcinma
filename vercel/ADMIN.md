@@ -1,109 +1,78 @@
 # Uzcinma Studio admin panel
 
-## Hozir ochish
+## Internetdagi panel
 
-Sayt ishlayotgan kompyuterda: http://localhost:5176/admin/
+https://uzcinma.vercel.app/admin/
 
-Birinchi ochilganda o'zingiz parol yarating. Parol kamida 8 belgi.
-Bot tokenini yoki parolni chatga yuborish kerak emas.
-Parol scrypt bilan xeshlanadi; browserga bot tokeni berilmaydi.
+Avvalgi admin parolingiz bilan kiring. Bot tokeni yoki parolni chatga yuborish kerak emas.
+Panel jonli Turso bazasiga ulanadi. Noutbuk yoqilgan bo'lishi shart emas.
 
-Ishga tushirish:
+## Filmlar va rasmlar
 
-~~~powershell
-cd C:\Users\User\Desktop\uzcinma\vercel
-node scripts/dev.mjs
-~~~
-
-## Kino yuklash va rasmlarni boshqarish
-
-Kinoni bevosita Telegram botga yuboring. Paneldagi **Botni ochish** shu botga olib boradi.
-Botga kelgan filmlar panelning Filmlar royxatida korinadi. Royxat ochiq turganda har 5 soniyada yangilanadi.
+Kinoni bevosita Telegram botga yuboring. **Botni ochish** shu botga olib boradi.
+Webhook yangi filmlarni jonli bazaga yozadi. Panel ro'yxati har 5 soniyada yangilanadi.
 
 1. Film qatorida **Tahrirlash** ni bosing.
-2. Nom, tavsif, turi, yil, reyting va kategoriyalarni ozgartiring.
+2. Nom, tavsif, turi, yil, reyting va kategoriyalarni o'zgartiring.
 3. Xohlasangiz banner va kartochka rasmini tanlang.
-4. **Ozgarishlarni saqlash** ni bosing.
+4. **O'zgarishlarni saqlash** ni bosing.
 
-Admin panelda video yuklash va almashtirish yoq. Backend ham yangi video yuklash sorovini rad etadi.
-Banner va poster botga yuboriladi; qabul qilish va Telegramga uzatish foizlari korinadi.
-Rasm tanlanmasa yoki ochilmasa, standart Uzcinma banneri va kartochkasi korinadi.
-Telegram tasdiqlagan fayl qayta urinishda takror yuborilmaydi.
+Banner va poster Telegram botga yuboriladi, file_id jonli katalogda saqlanadi.
+Rasmning serverga yuborilishi va Telegramga uzatilishi panelda ko'rinadi.
+JPG, PNG va WebP qabul qilinadi. Katta rasmlar brauzerda 2 MB gacha tayyorlanadi;
+bu faqat banner/posterga tegishli, video o'zgartirilmaydi.
+Rasm tanlanmasa yoki ochilmasa, standart Uzcinma rasmi chiqadi.
+Videoni paneldan yuklash yoki almashtirish yo'q.
 
-## Tahrirlash va bosh sahifa
+## Bosh sahifa va o'chirish
 
-**Filmlar -> Tahrirlash**: nom, tavsif, kategoriya va rasmlarni o'zgartiring.
-Videoni paneldan almashtirish mumkin emas.
+**O'chirish** filmni saytdagi katalogdan yashiradi. **O'chirilgan -> Tiklash** bilan qaytariladi.
+Bu Telegramdagi asl xabarni yoki oldin berilgan media manzilini o'chirmaydi.
 
-**Ochirish** filmni saytdagi katalogdan olib tashlaydi. **Ochirilgan -> Tiklash** bilan qaytariladi.
-Bu Telegramdagi xabarni yoki oldin berilgan media manzilini o'chirmaydi.
+**Bosh sahifa** bo'limida avtomatik tanlovni o'chirib, filmlarni tanlang va tartiblang.
+Katta banner va tavsiyalar alohida saqlanadi. Bo'sh tanlov tegishli bo'limni yashiradi.
+Sayt keyingi katalog yangilanishida o'zgarishlarni oladi.
 
-**Bosh sahifa**: avtomatik tanlovni o'chiring, filmlarni tanlang, yuqori/past tugmalari bilan tartiblang va saqlang.
-Katta banner va tavsiyalar alohida boshqariladi. Tanlov bo'sh qoldirilsa tegishli bo'lim yashiriladi.
+## Xato bo'lsa
 
-## Xatolar va qayta urinish
+Rasm fayli va yuklash holati vaqtincha jonli bazada turadi; yakunlangach fayl baytlari tozalanadi.
+Telegram tasdig'i saqlangan bo'lsa, katalogni saqlashdagi xatodan keyin **Qayta urinish**
+o'sha rasmni Telegramga takror yubormaydi. Telegram javobi olinmagan tarmoq uzilishida
+tasdiq noma'lum bo'lishi mumkin. Yuklash to'liq kelmagan bo'lsa, rasmni qayta tanlang.
+Server jarayoni uzilganda keyingi so'rov yuklashni qayta urinish mumkin bo'lgan holatga o'tkazadi.
 
-Yuklash xatosi foydalanuvchiga ko'rsatiladi. To'liq qabul qilingan fayl qayta urinish uchun saqlanadi.
-Telegram qabul qilgan javob diskda qoladi; katalog saqlashda xato chiqsa o'sha fayl yana Telegramga yuborilmaydi.
-Bir sahifadagi banner va poster yuklashda **Qayta urinish** qolgan banner/posterni ham davom ettiradi.
-Brauzer yopilsa, to'liq qabul qilingan fayllar yuklanish tarixida qoladi; qisman kelgan faylni qayta tanlash talab etilishi mumkin.
-Tashqi Telegram/tarmoq xatolari umuman bo'lmasligini kafolatlash mumkin emas.
+## Vercel sozlamalari
 
-## Internetga joylash arxitekturasi
+README.md dagi jonli bot/baza sozlamalariga qo'shimcha `ADMIN_PASSWORD_HASH` kerak.
+Qiymat mavjud lokal `.private/admin/auth.json` dagi `{salt,hash}` JSONidir.
+Parol scrypt bilan tekshiriladi. Bu qiymatni faqat server Environment Variables ichiga joylang;
+GitHubga yoki `VITE_` o'zgaruvchilariga yozmang.
+Parol sozlanmaguncha internetdagi API yopiq qoladi; ochiq saytdan yangi parol yaratib bo'lmaydi.
+Yangi o'rnatishda parolni avval lokal panelda yarating, so'ng uning xeshini serverga o'tkazing.
 
-Vercelda statik sayt va admin interfeysi quriladi. Katta fayllar Vercel Function orqali o'tkazilmaydi.
-Yuklash, Telegram uzatish va doimiy fayl/baza uchun alohida Node xizmati kerak.
-Quyidagi buyruq tayyor buildni, API va adminni bitta Node xizmatida ochadi:
+Kirish sessiyalari 8 soat davom etadi, Turso bazasida saqlanadi va server qayta ishga
+ tushganda yo'qolmaydi. Parol xeshi almashtirilsa oldingi sessiyalar bekor bo'ladi.
+Yozish so'rovlari sessiya, CSRF va `APP_ORIGIN` orqali tekshiriladi.
+Ketma-ket noto'g'ri kirish urinishlari vaqtincha cheklanadi.
+Hosting va Telegramning amaldagi xizmat limitlari saqlanadi.
+
+## Lokal ko'rish
 
 ~~~powershell
-npm run build
-npm run admin:server
+npm install
+npm run dev
 ~~~
 
-Lokal manzil: http://localhost:5182/admin/
-
-Production muhitida:
-
-~~~dotenv
-HOST=0.0.0.0
-PORT=5182
-ADMIN_ORIGIN=https://sizning-backend-domeningiz
-ADMIN_PASSWORD=uzun-maxfiy-parol
-~~~
-
-Internetga ochishdan oldin ADMIN_PASSWORD yoki mavjud xeshlangan parol bo'lishi shart.
-HTTPS, doimiy disk va serverning ishlashi hosting tomonidan ta'minlanishi kerak.
-Bu repo yangi hosting hisobini yaratmagan va serverga avtomatik joylamagan.
-Hozir ushbu uploader botning movies.sqlite3 bazasi bilan ishlaydi; bu rejimda TURSO_DATABASE_URL bo'sh bo'lsin.
-
-Vercel frontend buildida quyidagi faqat ochiq URL sozlanadi:
-
-~~~dotenv
-VITE_API_BASE=https://sizning-backend-domeningiz
-~~~
-
-Public katalog va video manzillari shu backenddan olinadi. Admin havolasi backendning o'z admin sahifasiga o'tadi; login cookie o'sha yerda qoladi.
-BOT_TOKEN, ADMIN_PASSWORD va boshqa sirlar VITE_ prefiksiga ega bo'lmasin.
-
-## Haqiqiy xizmat chegaralari
-
-Videolar paneldan yuklanmaydi; ular bevosita Telegram botga yuboriladi.
-Telegram serverining haqiqiy upload cheklovlari amal qiladi. Standart Bot API sendVideo/sendDocument hozir 50MB; 2GB+ ni bu usul bilan kafolatlab bo'lmaydi.
-Telegram Premium standart bot upload API limitini almashtirmaydi.
-Telegram rad etsa panel sababni ko'rsatadi va uni muvaffaqiyat deb belgilamaydi.
-Local Bot API boshqa imkoniyatlarga ega, ammo alohida doimiy server talab qiladi.
-
-Manbalar: [Telegram sendVideo](https://core.telegram.org/bots/api#sendvideo), [sendDocument](https://core.telegram.org/bots/api#senddocument), [Vercel Function limits](https://vercel.com/docs/functions/limitations).
+http://localhost:5176/admin/ lokal `movies.sqlite3` bilan ishlaydi.
+Birinchi marta lokal panelda kamida 8 belgili parol yaratiladi.
+Lokal va internet bazalari alohida: internetdagi katalog uchun internetdagi paneldan foydalaning.
 
 ## Tekshiruv
 
 ~~~powershell
 npm test
-node tests/admin.browser.mjs
-$env:TEST_ADMIN_RETRY='1'
-node tests/admin.browser.mjs
-Remove-Item Env:TEST_ADMIN_RETRY
+npm run build
 ~~~
 
-Testlar ajratilgan baza va test Telegram adapteri bilan bajariladi; haqiqiy botga sinov xabarlari yuborilmaydi.
-Haqiqiy botga Node orqali getMe tekshiruvi o'tkazilgan.
+Avtomatik testlar ajratilgan baza va test Telegram adapteri bilan bajariladi;
+haqiqiy botga sinov xabarlari yuborilmaydi.

@@ -1,3 +1,5 @@
+import {validateMovie} from './movie-validation.js';
+export {validateMovie} from './movie-validation.js';
 import {createClient} from '@libsql/client';
 import {randomBytes,randomUUID,scryptSync,timingSafeEqual,createHash} from 'node:crypto';
 import {readFileSync,existsSync,createWriteStream} from 'node:fs';
@@ -11,18 +13,7 @@ import {GENRES} from './core.js';
 import {uploadToTelegram} from './admin-telegram.js';
 const projectDefault=fileURLToPath(new URL('../',import.meta.url));
 const fault=(message,status=400)=>Object.assign(Error(message),{status});
-const types=['movie','series','animation','anime'];
 const id=value=>{if(!/^[1-9]\d{0,14}$/.test(String(value)))throw fault('Film ID notogri.');return Number(value);};
-export function validateMovie(input){
- const title=String(input.title||'').trim(),description=String(input.description||'');
- const genres=[...new Set(Array.isArray(input.genres)?input.genres:[])],type=input.type||'movie';
- const year=input.year===''||input.year===null||input.year===undefined?null:Number(input.year),rating=Number(input.rating||0);
- if(!title||title.length>200||description.length>3000)throw fault('Film nomi 1-200, tavsifi 0-3000 belgi bolishi kerak.');
- if(genres.some(g=>!GENRES.includes(g))||!types.includes(type))throw fault('Kategoriya yoki film turi notogri.');
- if(year!==null&&(!Number.isInteger(year)||year<1888||year>2100))throw fault('Yil notogri.');
- if(!Number.isFinite(rating)||rating<0||rating>10)throw fault('Reyting 0-10 oraligida bolishi kerak.');
- return {title,description,genres,type,year,rating};
-}
 function environment(path){
  if(!existsSync(path))return {};
  return Object.fromEntries(readFileSync(path,'utf8').split(/\r?\n/).filter(line=>line.includes('=')&&!line.trim().startsWith('#')).map(line=>{const n=line.indexOf('=');return [line.slice(0,n).trim(),line.slice(n+1).trim().replace(/^(['"])(.*)\1$/,'$2')];}));

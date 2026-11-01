@@ -39,7 +39,7 @@
   "rewrites": [
     {
       "source": "/api/manage/:path*",
-      "destination": "/api/manage"
+      "destination": "/api/manage?route=:path*"
     }
   ]
 }
