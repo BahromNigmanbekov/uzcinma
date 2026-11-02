@@ -13,6 +13,8 @@ import {MoviePlayer} from './player.js';
 import {apiURL,normalizeCatalog} from './api-client.js';
 import {formatTime} from './player-utils.js';
 const $=id=>document.getElementById(id);
+function updateHeader(){$('header').classList.toggle('is-scrolled',scrollY>24);}
+window.addEventListener('scroll',updateHeader,{passive:true});updateHeader();
 const genres={action:'Jangari',adventure:'Sarguzasht',animation:'Multfilm',biography:'Biografiya',crime:'Kriminal',comedy:'Komediya',documentary:'Hujjatli',drama:'Drama',anime:'Anime',fantasy:'Fantastika',horror:'Horror',thriller:'Triller',romance:'Romantika',family:'Oilaviy'};
 const types={movie:'Kino',series:'Serial',anime:'Anime',animation:'Multfilm'};
 const state={q:'',genre:'',type:'',rating:0,sort:'latest',saved:false,offset:0,more:false,mode:'demo',trend:'popular',trendGenre:''};
@@ -102,8 +104,8 @@ $('latest').onclick=()=>{$('year-sort').value='';$('name-sort').value='';sort('l
 $('year-sort').onchange=e=>{$('name-sort').value='';sort(e.target.value==='old'?'year_asc':e.target.value==='new'?'year':'latest');};
 $('name-sort').onchange=e=>{$('year-sort').value='';sort(e.target.value==='za'?'title_desc':e.target.value==='az'?'title':'latest');};
 let debounce;function delayed(){clearTimeout(debounce);debounce=setTimeout(()=>loadCatalog(),250);}
-$('search').oninput=e=>{state.q=e.target.value.trim();delayed();$('movies').scrollIntoView({behavior:'smooth'});};
-$('search').onkeydown=e=>{if(e.key==='Escape')searchPanel(false);};
+$('search').oninput=e=>{const query=e.target.value.trim(),first=!state.q&&query;state.q=query;delayed();if(first)$('movies').scrollIntoView({behavior:'smooth'});};
+$('search').onkeydown=e=>{if(e.key==='Escape')searchPanel(false);if(e.key==='Enter'){searchPanel(false);$('movies').scrollIntoView({behavior:'smooth'});}};
 $('rating').oninput=e=>{state.rating=Number(e.target.value);$('rating-value').textContent=state.rating.toFixed(1);delayed();};
 function heroSlide(movie){
  const slide=el('article','swiper-slide hero-slide');slide.dataset.movieId=movie.id;let backdrop=movie.backdrop||DEFAULT_BANNER;if(backdrop==='/assets/hero.webp'&&innerWidth*devicePixelRatio<=850)backdrop='/assets/hero-small.webp';slide.dataset.backdrop=backdrop;
@@ -218,5 +220,5 @@ async function refreshUploadedVideos(){
 }
 const refreshTimer=setInterval(refreshUploadedVideos,5000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshUploadedVideos();});
-if(import.meta.hot)import.meta.hot.dispose(()=>clearInterval(refreshTimer));
+if(import.meta.hot)import.meta.hot.dispose(()=>{clearInterval(refreshTimer);window.removeEventListener('scroll',updateHeader);});
 init();

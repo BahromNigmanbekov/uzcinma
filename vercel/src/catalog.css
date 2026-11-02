@@ -2,7 +2,9 @@
 :root{--page-width:1600px;--page-gutter:clamp(18px,4vw,64px);--hero-height:clamp(640px,44vw,780px)}
 html{scroll-padding-top:96px}
 body{font-size:16px;line-height:1.5}
-#header{position:absolute;inset:0 0 auto;z-index:30;background:linear-gradient(180deg,#07080bed,#07080b99 65%,transparent)}
+#header{position:fixed;inset:0 0 auto;z-index:30;background:linear-gradient(180deg,#07080bed,#07080b99 65%,transparent)}
+#header.is-scrolled{background:#0c0c10f2;box-shadow:0 1px 0 #ffffff0d;backdrop-filter:blur(10px)}
+.without-hero #header{position:sticky;top:0}
 .header-inner{max-width:var(--page-width);margin:auto;padding:0 var(--page-gutter);height:96px;gap:32px;border:0}
 .header-inner nav{gap:clamp(18px,2.3vw,38px);margin-left:auto}
 .nav-link{font-size:14px;min-height:44px;white-space:nowrap}
