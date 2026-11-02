@@ -28,7 +28,7 @@ try{
  check(dimensions[0]>0&&dimensions[1]>0,'browser decodes the actual uploaded banner');
  check((await page.locator('#hero-slides .hero-slide').first().evaluate(e=>e.style.backgroundImage)).includes(movie.backdrop),'large hero uses the uploaded banner');
  mkdirSync('artifacts',{recursive:true});await page.locator('#hero').screenshot({path:'artifacts/banner-desktop-fixed.png'});
- await page.getByRole('button',{name:movie.title+' haqida',exact:true}).last().click();await page.locator('#detail-play').click();
+ await page.getByRole('button',{name:movie.title+' haqida',exact:true}).last().click();await page.locator('.title-play').click();
  await page.waitForFunction(()=>video.currentTime>.3,{},{timeout:15000});
  const source=await page.locator('#video').evaluate(v=>new URL(v.currentSrc).pathname);
  const ranged=await page.request.get(base+source,{headers:{Range:'bytes=0-1023'}});

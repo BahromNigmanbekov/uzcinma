@@ -4,7 +4,7 @@ const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'C:
 try{
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:5176');await page.locator('#movie-grid .movie-card').first().waitFor();
- await page.locator('#movie-grid .poster-button').first().click();await page.locator('#detail-play').click();
+ await page.locator('#movie-grid .poster-button').first().click();await page.locator('.title-play').click();
  await page.waitForFunction(()=>video.currentTime>.3);
  const current=await page.locator('#video').evaluate(v=>v.currentSrc);
  await page.route('**/api/catalog?**',async route=>{
@@ -13,7 +13,7 @@ try{
   data.movies.unshift(item);data.total++;
   await route.fulfill({response:upstream,json:data});
  });
- await page.getByRole('heading',{name:'Automatic refresh test',exact:true}).first().waitFor({timeout:15000});
+ await page.getByRole('heading',{name:'Automatic refresh test',exact:true}).first().waitFor({state:'attached',timeout:15000});
  assert.equal(await page.locator('#video').evaluate(v=>v.currentSrc),current);
  assert.equal(await page.locator('#video').evaluate(v=>v.paused),false);
  assert.deepEqual(errors,[]);

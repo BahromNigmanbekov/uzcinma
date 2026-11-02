@@ -13,8 +13,9 @@ try{
  check(await page.locator('#movie-grid .movie-card').count()===Math.min(12,catalog.total),'uploaded movies appear in the grid');
  check(await page.locator('#demo-player').isHidden(),'demo playback button is hidden');
  for(let i=0;i<Math.min(catalog.total,3);i++){
+  if(i)await page.locator('.title-back').click();
   const playback=await(await page.request.get(base+'/api/playback?id='+catalog.movies[i].id)).json();
-  await page.locator('#movie-grid .poster-button').nth(i).click();await page.locator('#detail-play').click();
+  await page.locator('#movie-grid .poster-button').nth(i).click();await page.locator('.title-play').click();
   await page.waitForFunction(()=>document.getElementById('video').currentTime>.5,{},{timeout:15000});
   const video=await page.locator('#video').evaluate(v=>({src:new URL(v.currentSrc).pathname,duration:v.duration,time:v.currentTime,paused:v.paused}));
   check((playback.kind==='hls'||video.src.startsWith('/media/video-'))&&video.duration>0&&!video.paused,'uploaded video '+catalog.movies[i].id+' really plays');
@@ -32,7 +33,7 @@ try{
  await page.waitForFunction(title=>[...document.querySelectorAll('#movie-grid .movie-title')].every(n=>n.textContent.includes(title)),catalog.movies[0].title);
  check(await page.locator('#movie-grid .movie-title').first().textContent()===catalog.movies[0].title,'uploaded title search works');
  await page.locator('#search').fill('');await page.waitForFunction(n=>document.querySelectorAll('#movie-grid .movie-card').length===n,Math.min(12,catalog.total));await page.locator('#search-close').click();
- await page.locator('#movie-grid .save-button').first().click();await page.locator('[data-nav="saved"]').first().click();
+ await page.locator('.title-back').click();await page.locator('#movie-grid .save-button').first().click();await page.locator('[data-nav="saved"]').first().click();
  await page.waitForFunction(()=>document.querySelectorAll('#movie-grid .movie-card').length===1);
  check(await page.locator('#movie-grid .movie-card').count()===1,'uploaded movie can be saved');
  await page.locator('[data-nav="home"]').first().click();await page.waitForFunction(n=>document.querySelectorAll('#movie-grid .movie-card').length===n,Math.min(12,catalog.total));

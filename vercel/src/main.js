@@ -1,3 +1,6 @@
+import {TitlePage,wordmark} from './title-page.js';
+import {installSearch} from './search.js';
+import {configureSound,toggleSound,soundEnabled} from './selection-sound.js';
 import './style.css';
 import './branding.css';
 import './catalog.css';
@@ -18,7 +21,7 @@ window.addEventListener('scroll',updateHeader,{passive:true});updateHeader();
 const genres={action:'Jangari',adventure:'Sarguzasht',animation:'Multfilm',biography:'Biografiya',crime:'Kriminal',comedy:'Komediya',documentary:'Hujjatli',drama:'Drama',anime:'Anime',fantasy:'Fantastika',horror:'Horror',thriller:'Triller',romance:'Romantika',family:'Oilaviy'};
 const types={movie:'Kino',series:'Serial',anime:'Anime',animation:'Multfilm'};
 const state={q:'',genre:'',type:'',rating:0,sort:'latest',saved:false,offset:0,more:false,mode:'demo',trend:'popular',trendGenre:''};
-const pool=new Map();let boot=[],request,fetchVersion=0,trendSwiper,heroSwiper,detailMovie,toastTimer;
+const pool=new Map();let boot=[],request,fetchVersion=0,trendSwiper,heroSwiper,toastTimer;
 let saved;try{saved=new Set(JSON.parse(localStorage.getItem('uzcinma-saved')||'[]'));}catch{saved=new Set();}
 const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 function svg(name){const n=el('span','svg-icon');n.innerHTML=icon(name);return n;}
@@ -26,13 +29,13 @@ function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTi
 function button(cls,text,name,action){const n=el('button',cls);if(name)n.append(svg(name));if(text)n.append(document.createTextNode(text));n.onclick=action;return n;}
 function updateSaved(){
  document.querySelectorAll('[data-save]').forEach(node=>{const selected=saved.has(node.dataset.save);node.classList.toggle('saved',selected);node.setAttribute('aria-pressed',String(selected));node.setAttribute('aria-label',selected?"Ro'yxatdan olib tashlash":"Ro'yxatga qo'shish");});
- const selected=saved.has(player.movie.id);$('watch-save').classList.toggle('saved',selected);$('watch-save').setAttribute('aria-pressed',String(selected));
- if(detailMovie){const selected=saved.has(detailMovie.id);$('detail-save').replaceChildren(svg(selected?'check':'plus'),document.createTextNode(selected?'Saqlandi':"Ro'yxatga"));}
+ const selected=saved.has(player.movie.collection_id||player.movie.id);$('watch-save').classList.toggle('saved',selected);$('watch-save').setAttribute('aria-pressed',String(selected));
 }
 function toggleSave(movie){
+ if(movie.collection_id)movie=pool.get(movie.collection_id)||titlePage.data?.movie||movie;
  if(saved.has(movie.id))saved.delete(movie.id);else saved.add(movie.id);
  try{localStorage.setItem('uzcinma-saved',JSON.stringify([...saved]));}catch{toast('Brauzer saqlashga ruxsat bermadi.');}
- updateSaved();if(state.saved)loadCatalog();return saved.has(movie.id);
+ updateSaved();titlePage.refreshSaved();if(state.saved)loadCatalog();return saved.has(movie.id);
 }
 function card(movie){
  const n=el('article','movie-card'),poster=el('div','poster-wrap');
@@ -46,23 +49,16 @@ function card(movie){
  if(movie.rating>0){const rating=el('span','card-rating','\u2605 '+Number(movie.rating).toFixed(1));rating.setAttribute('aria-label','Reyting '+movie.rating);meta.append(rating);}
  n.append(poster,title,meta);return n;
 }
-function details(movie){
- detailMovie=movie;setImage($('detail-poster'),movie.poster);$('detail-poster').alt=movie.title;
- $('detail-type').textContent=types[movie.type]||'Kino';$('detail-title').textContent=movie.title;
- $('detail-meta').textContent=[movie.year,movie.rating?'\u2605 '+movie.rating:null,...(movie.genres||[]).map(g=>genres[g]||g)].filter(Boolean).join(' \u00b7 ');
- $('detail-description').textContent=movie.description||'Tavsif hali kiritilmagan.';
- $('detail-message').textContent=movie.available?'':"Video manbasi hali ulanmagan. Pleyerni pastdagi sinov videosida tekshirishingiz mumkin.";
- $('detail-play').replaceChildren(svg('play'),document.createTextNode('Tomosha qilish'));
- $('detail-play').onclick=()=>{$('details-dialog').close();watch(movie);};
- $('detail-save').onclick=()=>toggleSave(movie);updateSaved();$('details-dialog').showModal();
-}
+function details(movie){titlePage.open(movie);}
+
 function heading(movie){
  $('watch-title').textContent=movie.title+(movie.year?' ('+movie.year+')':'');
  $('watch-subtitle').textContent=movie.id==='demo-bunny'?'Ochiq HLS sinov videosi':movie.available?(movie.origin==='telegram'?'Botdan yuklangan video':'Tomosha qilish'):"Video manbasi hali ulanmagan";
  updateSaved();
 }
 const player=new MoviePlayer({onMovie:heading,onError:toast});
-function watch(movie){$('watch-section').scrollIntoView({behavior:'smooth',block:'center'});player.load(movie);}
+const titlePage=new TitlePage({player,toast,toggleSave,isSaved:id=>saved.has(id),genres});
+function watch(movie){if(movie.id==='demo-bunny'&&!titlePage.active){$('watch-section').hidden=false;$('watch-section').scrollIntoView({behavior:'smooth',block:'center'});player.load(movie);}else titlePage.open(movie,{autoplay:true});}
 async function demo(){
  let movie=pool.get('demo-bunny');
  if(!movie)movie={id:'demo-bunny',title:'Big Buck Bunny',year:2008,available:true,poster:'/assets/bunny.webp',backdrop:'/assets/bunny-landscape.webp'};
@@ -71,22 +67,24 @@ async function demo(){
 }
 $('watch-save').onclick=()=>toggleSave(player.movie);
 for(const id of ['demo-player','info-demo'])$(id).onclick=()=>{$('info-dialog').close();demo();};
-for(const [id,name]of Object.entries({'search-toggle':'search','search-close':'close','info-toggle':'bell','menu-toggle':'menu','details-close':'close','info-close':'close','trend-prev':'left','trend-next':'right'}))putIcon(id,name);
+for(const [id,name]of Object.entries({'search-toggle':'search','search-close':'close','info-toggle':'bell','menu-toggle':'menu','info-close':'close','trend-prev':'left','trend-next':'right'}))putIcon(id,name);
 $('trends-title').append(svg('trend'),document.createTextNode('Hozir trendda'));$('movies-title').append(svg('film'),document.createTextNode('Kinolar'));
 for(const node of document.querySelectorAll('[data-trend]')){const value=node.dataset.trend;node.append(svg({popular:'fire',premieres:'star',recent:'plus'}[value]),document.createTextNode({popular:'Mashhur',premieres:'Premyeralar',recent:"Yangi qo'shilgan"}[value]));node.setAttribute('aria-label',node.textContent);node.onclick=()=>{state.trend=value;document.querySelectorAll('[data-trend]').forEach(b=>b.classList.toggle('active',b===node));renderTrends();};}
 $('section-search').append(svg('search'),document.createTextNode('Qidirish'));
-function searchPanel(open=true){$('search-panel').hidden=!open;if(open)$('search').focus();}
+function searchPanel(open=true){$('search-panel').hidden=!open;$('search-toggle').setAttribute('aria-expanded',String(open));if(open)$('search').focus();}
 $('search-toggle').onclick=()=>searchPanel($('search-panel').hidden);$('search-close').onclick=()=>searchPanel(false);$('section-search').onclick=()=>searchPanel(true);
-$('info-toggle').onclick=()=>$('info-dialog').showModal();$('info-close').onclick=()=>$('info-dialog').close();$('details-close').onclick=()=>$('details-dialog').close();
-for(const dlg of [$('details-dialog'),$('info-dialog')])dlg.addEventListener('click',e=>{if(e.target===dlg){const r=dlg.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dlg.close();}});
+$('info-toggle').onclick=()=>$('info-dialog').showModal();$('info-close').onclick=()=>$('info-dialog').close();
+for(const dlg of [$('info-dialog')])dlg.addEventListener('click',e=>{if(e.target===dlg){const r=dlg.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dlg.close();}});
 $('menu-toggle').onclick=()=>{const open=$('mobile-nav').hidden;$('mobile-nav').hidden=!open;$('menu-toggle').setAttribute('aria-expanded',String(open));};
 function nav(which){
+ titlePage.close({navigate:true});if(location.pathname!=='/')history.pushState({},'','/');searchPanel(false);
  state.saved=which==='saved';state.type=which==='series'?'series':'';state.genre='';state.q='';$('search').value='';
  document.querySelectorAll('[data-nav]').forEach(b=>b.classList.toggle('active',b.dataset.nav===which));document.querySelectorAll('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===(state.type||'all')));
  $('movies-title').replaceChildren(svg(state.saved?'heart':state.type==='series'?'series':'film'),document.createTextNode(state.saved?"Mening ro'yxatim":state.type==='series'?'Seriallar':'Kinolar'));
  renderGenres();loadCatalog();$('mobile-nav').hidden=true;$('menu-toggle').setAttribute('aria-expanded','false');
  (which==='home'?$('hero'):$('movies')).scrollIntoView({behavior:'smooth'});
 }
+document.querySelector('.header-inner .brand').onclick=e=>{e.preventDefault();nav('home');};
 document.querySelectorAll('[data-nav]').forEach(node=>node.onclick=()=>nav(node.dataset.nav));$('profile-toggle').onclick=()=>nav('saved');
 document.querySelectorAll('[data-type]').forEach(node=>node.onclick=()=>{state.type=node.dataset.type==='all'?'':node.dataset.type;state.saved=false;document.querySelectorAll('[data-type]').forEach(b=>b.classList.toggle('active',b===node));loadCatalog();});
 function genreRow(id,selected,change){
@@ -113,6 +111,7 @@ function heroSlide(movie){
  content.append(el('p','hero-duration',duration?'Davomiyligi: '+formatTime(duration):types[movie.type]||'Kino'));
  const rating=el('div','hero-rating');if(movie.rating){rating.append(el('span','star','\u2605'),el('strong','',Number(movie.rating).toFixed(1)));}
  rating.append(el('span','hero-genres',(movie.genres||[]).map(g=>genres[g]||g).join(' | ')));content.append(rating,el('h1','',movie.title));content.querySelector('h1').title=movie.title;
+ if(movie.logo){const logo=el('img','hero-title-logo');wordmark(logo,movie.logo,movie.title);content.insertBefore(logo,content.querySelector('h1'));}
  let description=movie.description||'Yangi filmlar, sevimli hikoyalar va katta sarguzashtlar.';
  if(movie.id==='demo-rampage')description="Uchta hayvon xavfli tajriba ta'sirida ulkan maxluqlarga aylanadi. Davis Okoye Chikagoni qutqarish uchun kurashadi.";
  content.append(el('p','hero-description',description));
@@ -184,7 +183,7 @@ $('more').onclick=()=>loadCatalog(true);
 async function init(){
  try{
   const response=await fetch(apiURL('/api/catalog?limit=60'));const data=normalizeCatalog(await response.json());if(!response.ok)throw Error(data.error||'Katalog ochilmadi.');
-  state.mode=data.mode;state.provider=data.provider;state.home=data.home;boot=data.movies;boot.forEach(m=>pool.set(m.id,m));for(const m of [...(state.home?.hero||[]),...(state.home?.recommendations||[])])pool.set(m.id,m);
+  state.mode=data.mode;state.provider=data.provider;state.home=data.home;configureSound(state.home?.selection_sound_enabled);boot=data.movies;boot.forEach(m=>pool.set(m.id,m));for(const m of [...(state.home?.hero||[]),...(state.home?.recommendations||[])])pool.set(m.id,m);
   if(state.mode==='demo'){
    $('mode-label').textContent='Dizayn namunalari \u00b7 HLS sinov pleyeri';
    $('info-mode').textContent="Hozir dizayn namunalari ko'rsatilmoqda. Katalogdagi tijoriy filmlar uchun video manbasi ulanmagan. Big Buck Bunny orqali haqiqiy video sifatlarini va boshqaruvni sinab ko'ring.";
@@ -207,7 +206,7 @@ async function refreshUploadedVideos(){
   const response=await fetch(apiURL('/api/catalog?limit=60'),{cache:'no-store'});if(!response.ok)return;
   const data=normalizeCatalog(await response.json());
   if(JSON.stringify(data.movies)===JSON.stringify(boot)&&JSON.stringify(data.home)===JSON.stringify(state.home))return;
-  state.home=data.home;
+  state.home=data.home;configureSound(state.home?.selection_sound_enabled);
   const added=data.movies.some(m=>!pool.has(m.id));boot=data.movies;boot.forEach(m=>pool.set(m.id,m));for(const m of [...(state.home?.hero||[]),...(state.home?.recommendations||[])])pool.set(m.id,m);
   const refreshed=pool.get(player.movie.id);
   if(refreshed){const becameReady=!player.movie.available&&refreshed.available;player.movie=refreshed;heading(refreshed);if(!player.loaded)setVideoPoster($('video'),refreshed.backdrop);if(becameReady&&!player.loaded)player.message('Video tayyor. Ijro tugmasini bosing.');}
@@ -221,4 +220,10 @@ async function refreshUploadedVideos(){
 const refreshTimer=setInterval(refreshUploadedVideos,5000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshUploadedVideos();});
 if(import.meta.hot)import.meta.hot.dispose(()=>{clearInterval(refreshTimer);window.removeEventListener('scroll',updateHeader);});
-init();
+installSearch({open:details,onQuery:q=>{state.q=q;delayed();},demoMovies:()=>state.mode==='demo'?boot:null});
+const soundButton=el('button','secondary sound-setting');soundButton.type='button';
+const soundNav=el('button','nav-link');soundNav.type='button';soundNav.id='sound-nav';$('mobile-nav').append(soundNav);
+function soundLabel(){soundNav.textContent='Tanlash ovozi: '+(soundEnabled()?'yoqilgan':'o\u2018chirilgan');soundNav.setAttribute('aria-pressed',String(soundEnabled()));soundButton.textContent='Tanlash ovozi: '+(soundEnabled()?'yoqilgan':'o\u2018chirilgan');soundButton.setAttribute('aria-pressed',String(soundEnabled()));}
+soundNav.onclick=soundButton.onclick=()=>{toggleSound();soundLabel();};soundLabel();$('info-dialog').append(soundButton);
+$('watch-section').hidden=true;
+init().then(()=>titlePage.route());

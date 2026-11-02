@@ -33,11 +33,10 @@ try{
  check(await page.locator('#movie-grid .movie-title').textContent()==='Deadpool 2','saved list displays selected movie');
  await page.locator('[data-nav="home"]').first().click();await page.waitForFunction(()=>document.querySelectorAll('#movie-grid .movie-card').length===12);
  await page.locator('#movie-grid .poster-button').first().click();
- check(await page.locator('#details-dialog').isVisible(),'movie details opens');
- await page.locator('#detail-play').click();
- await page.waitForFunction(()=>document.getElementById('player-message').textContent.includes('hali ulanmagan'));
+ check(await page.locator('#title-page').isVisible(),'movie details opens');
+ check(await page.locator('.title-play').isDisabled(),'unconfigured movie has no playback button');
  check(await page.locator('#video').evaluate(v=>!v.currentSrc),'unconfigured movie never pretends to play another film');
- await page.locator('#demo-player').click();
+ await page.locator('.title-back').click();await page.locator('#demo-player').click();
  await page.waitForFunction(()=>document.getElementById('video').currentTime>1,{},{timeout:30000});
  check(await page.locator('#video').evaluate(v=>v.duration>600&&!v.paused),'actual HLS sample plays');
  await page.locator('#settings-toggle').click();

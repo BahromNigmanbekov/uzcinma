@@ -19,6 +19,12 @@ CREATE TABLE IF NOT EXISTS movies (
  banner_file_id TEXT,
  poster_url TEXT,
  backdrop_url TEXT,
+ logo_file_id TEXT,
+ logo_url TEXT,
+ collection_id INTEGER,
+ season_number INTEGER,
+ episode_number INTEGER,
+ is_collection INTEGER NOT NULL DEFAULT 0,
  deleted INTEGER NOT NULL DEFAULT 0,
  created_at INTEGER NOT NULL,
  updated_at INTEGER NOT NULL
@@ -39,3 +45,11 @@ CREATE TABLE IF NOT EXISTS telegram_updates (
 );
 
 CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY,value TEXT NOT NULL);
+
+CREATE TABLE IF NOT EXISTS seasons (
+ series_id INTEGER NOT NULL REFERENCES movies(id),
+ number INTEGER NOT NULL,
+ title TEXT NOT NULL DEFAULT '',
+ description TEXT NOT NULL DEFAULT '',
+ PRIMARY KEY(series_id,number)
+);

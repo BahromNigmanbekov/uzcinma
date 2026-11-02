@@ -1,3 +1,4 @@
+import {installAdminSeries} from './admin-series.js';
 import {prepareAdminImage} from './admin-images.js';
 import './admin.css';
 import './branding.css';
@@ -49,7 +50,7 @@ $('editor-back').onclick=()=>page('library');$('reset-editor').onclick=()=>openE
 function selectedGenres(){return [...document.querySelectorAll('#genre-options input:checked')].map(n=>n.value);}
 function renderGenres(selected=[]){$('genre-options').replaceChildren(...Object.entries(labels).map(([key,label])=>{const wrap=el('label','genre-choice'),input=el('input');input.type='checkbox';input.value=key;input.checked=selected.includes(key);wrap.append(input,el('span','',label));return wrap;}));}
 function setPreview(kind,url){
- const img=$(kind+'-preview'),help=$(kind+'-quality');img.hidden=false;
+ const img=$(kind+'-preview'),help=$(kind+'-quality');img.hidden=false;if(kind==='logo'){img.hidden=!url;img.onerror=()=>img.hidden=true;if(url)img.src=url;else img.removeAttribute('src');return;}
  const normal=kind==='banner'?'Gorizontal rasm: 2560 × 1440 tavsiya etiladi.':'Vertikal rasm: 2:3 nisbat tavsiya etiladi.';
  help.textContent=normal;help.classList.remove('low-quality');
  img.onload=()=>{
@@ -61,24 +62,24 @@ function setPreview(kind,url){
  };
  setImage(img,url,kind);
 }
-function openEditor(movieId=null){
+async function openEditor(movieId=null){
  if(busy){toast('Joriy yuklash tugashini kuting.');return;}
- pendingBatch=null;editing=movieId?String(movieId):null;const movie=movies.find(m=>m.id===editing);
+ pendingBatch=null;editing=movieId?String(movieId):null;let movie=movies.find(m=>m.id===editing);if(!movie&&editing){try{movie=(await api('/movies/'+editing)).movie;movies.push(movie);}catch(error){toast(error.message);}}
  if(!movie){page('library');toast('Royxatdan tahrirlanadigan filmni tanlang.');return;}
  $('movie-form').reset();$('editor-title').textContent='Filmni tahrirlash';
  $('movie-title').value=movie?.title||'';$('movie-description').value=movie?.description||'';$('movie-type').value=movie?.type||'movie';$('movie-year').value=movie?.year||'';$('movie-rating').value=movie?.rating||0;
  renderGenres(movie?.genres||[]);
  $('banner-label').textContent='Banner rasmini tanlang';$('poster-label').textContent='Poster rasmini tanlang';
- setPreview('banner',movie?.has_banner?movie.backdrop:null);setPreview('poster',movie?.poster||null);
+ setPreview('banner',movie?.has_banner?movie.backdrop:null);setPreview('poster',movie?.poster||null);setPreview('logo',movie?.logo||null);$('logo-label').textContent='Logo rasmini tanlang';$('clear-logo').hidden=!movie.logo;
  $('save-movie').textContent='Ozgarishlarni saqlash';$('editor-status').textContent='Malumotlar tayyor bolgach saqlang.';
- page('editor');
+ page('editor');await seriesEditor.open(movie);
 }
-for(const kind of ['banner','poster']){
+for(const kind of ['banner','poster','logo']){
  const input=$(kind+'-file'),zone=input.closest('.file-zone');
  input.onchange=()=>{
   const file=input.files[0];
   $(kind+'-label').textContent=file?file.name+' ('+bytes(file.size)+')':kind==='banner'?'Banner rasmini tanlang':'Poster rasmini tanlang';
-  {if(previews.has(kind))URL.revokeObjectURL(previews.get(kind));if(file){const url=URL.createObjectURL(file);previews.set(kind,url);setPreview(kind,url);}else{const movie=movies.find(m=>m.id===editing);setPreview(kind,kind==='banner'?(movie?.has_banner?movie.backdrop:null):movie?.poster);}}
+  {if(previews.has(kind))URL.revokeObjectURL(previews.get(kind));if(file){const url=URL.createObjectURL(file);previews.set(kind,url);setPreview(kind,url);}else{const movie=movies.find(m=>m.id===editing);setPreview(kind,kind==='logo'?movie?.logo:kind==='banner'?(movie?.has_banner?movie.backdrop:null):movie?.poster);}}
  };
  zone.ondragover=e=>{e.preventDefault();zone.classList.add('dragging');};zone.ondragleave=()=>zone.classList.remove('dragging');
  zone.ondrop=e=>{e.preventDefault();zone.classList.remove('dragging');if(e.dataTransfer.files.length){const transfer=new DataTransfer();transfer.items.add(e.dataTransfer.files[0]);input.files=transfer.files;input.dispatchEvent(new Event('change'));}};
@@ -88,14 +89,14 @@ $('movie-type').onchange=()=>{
  if(key){const input=document.querySelector('#genre-options input[value="'+key+'"]');if(input)input.checked=true;}
 };
 function renderLibrary(){
- $('nav-count').textContent=movies.filter(m=>!m.deleted).length;$('stat-total').textContent=movies.filter(m=>!m.deleted).length;$('stat-ready').textContent=movies.filter(m=>!m.deleted&&m.available).length;$('stat-hero').textContent=home.hero_ids===null?'Avto':(home.hero_ids||[]).length;
+ $('nav-count').textContent=movies.filter(m=>!m.deleted&&!m.collection_id).length;$('stat-total').textContent=movies.filter(m=>!m.deleted&&!m.collection_id).length;$('stat-ready').textContent=movies.filter(m=>!m.deleted&&m.available).length;$('stat-hero').textContent=home.hero_ids===null?'Avto':(home.hero_ids||[]).length;
  const q=$('library-search').value.toLowerCase(),filter=$('visibility-filter').value;
- const visible=movies.filter(m=>m.title.toLowerCase().includes(q)&&(filter==='all'||(filter==='active'?!m.deleted:m.deleted)));
+ const visible=movies.filter(m=>!m.collection_id&&m.title.toLowerCase().includes(q)&&(filter==='all'||(filter==='active'?!m.deleted:m.deleted)));
  $('movie-list').replaceChildren(...visible.map(movie=>{
   const row=el('tr'),film=el('td'),cell=el('div','film-cell'),image=el('img');setImage(image,movie.poster);image.alt='';image.loading='lazy';image.decoding='async';
   const text=el('div');text.append(el('strong','',movie.title),el('small','','ID '+movie.id+' / '+(typeLabels[movie.type]||'Kino')+(movie.year?' / '+movie.year:'')));cell.append(image,text);film.append(cell);
   const category=el('td');if(movie.genres.length)movie.genres.slice(0,3).forEach(g=>category.append(el('span','genre-tag',labels[g]||g)));else category.append(el('span','genre-tag','Tanlanmagan'));
-  const status=el('td');status.append(el('span','badge'+(movie.deleted?' hidden':!movie.available?' waiting':''),movie.deleted?"O'chirilgan":movie.available?'Tayyor':'Video kutilmoqda'));
+  const status=el('td');status.append(el('span','badge'+(movie.deleted?' hidden':!movie.available?' waiting':''),movie.deleted?"O'chirilgan":movie.available?'Tayyor':movie.is_collection?'Qismlar kutilmoqda':'Video kutilmoqda'));
   const actions=el('td'),buttons=el('div','table-actions');buttons.append(button('Tahrirlash',()=>openEditor(movie.id)),button(movie.deleted?'Tiklash':"O'chirish",async()=>{
    try{await api('/movies/'+movie.id,{method:'PATCH',body:{deleted:!movie.deleted}});toast(movie.deleted?'Film tiklandi.':'Film saytdan olib tashlandi. Tiklash mumkin.');await loadData();}catch(error){toast(error.message);}
   },'small-button'+(movie.deleted?'':' danger')));actions.append(buttons);
@@ -114,7 +115,7 @@ function renderHome(){
    const down=button('\u2193',()=>{if(index<ids.length-1){homeDirty=true;[ids[index+1],ids[index]]=[ids[index],ids[index+1]];renderHome();}});down.setAttribute('aria-label','Pastga: '+(movie?.title||id));down.disabled=index===ids.length-1;
    row.append(up,down);return row;
   }));
-  candidates.replaceChildren(...movies.filter(m=>!m.deleted).map(movie=>{
+  candidates.replaceChildren(...movies.filter(m=>!m.deleted&&!m.collection_id).map(movie=>{
    const label=el('label'),input=el('input'),image=el('img');input.type='checkbox';input.checked=ids.includes(movie.id);input.setAttribute('aria-label',movie.title);
    input.onchange=()=>{homeDirty=true;if(input.checked){if(ids.length>=12){input.checked=false;toast('12 tagacha film tanlang.');return;}ids.push(movie.id);}else ids.splice(ids.indexOf(movie.id),1);renderHome();};
    setImage(image,movie.poster);image.alt='';image.loading='lazy';label.append(input,image,el('span','',movie.title));return label;
@@ -124,12 +125,12 @@ function renderHome(){
 $('hero-auto').onchange=$('recommend-auto').onchange=()=>{homeDirty=true;renderHome();};
 $('save-home').onclick=async()=>{
  $('save-home').disabled=true;
- try{await api('/home',{method:'POST',body:{hero_ids:$('hero-auto').checked?null:heroIds,recommendation_ids:$('recommend-auto').checked?null:recommendIds}});homeDirty=false;await loadData();toast('Bosh sahifa tanlovi saqlandi.');}
+ try{await api('/home',{method:'POST',body:{hero_ids:$('hero-auto').checked?null:heroIds,recommendation_ids:$('recommend-auto').checked?null:recommendIds,selection_sound_enabled:$('selection-sound-enabled').checked}});homeDirty=false;await loadData();toast('Bosh sahifa tanlovi saqlandi.');}
  catch(error){toast(error.message);}finally{$('save-home').disabled=false;}
 };
 async function loadData({libraryOnly=false}={}){
  const version=++catalogVersion,data=await api('/movies');if(version!==catalogVersion||(libraryOnly&&$('page-library').hidden))return;movies=data.movies;home=data.home;
- if(!homeDirty){const active=new Set(movies.filter(m=>!m.deleted).map(m=>m.id));heroIds=[...(home.hero_ids||[])].filter(id=>active.has(id));recommendIds=[...(home.recommendation_ids||[])].filter(id=>active.has(id));$('hero-auto').checked=home.hero_ids===null;$('recommend-auto').checked=home.recommendation_ids===null;}
+ if(!homeDirty){const active=new Set(movies.filter(m=>!m.deleted&&!m.collection_id).map(m=>m.id));heroIds=[...(home.hero_ids||[])].filter(id=>active.has(id));recommendIds=[...(home.recommendation_ids||[])].filter(id=>active.has(id));$('hero-auto').checked=home.hero_ids===null;$('recommend-auto').checked=home.recommendation_ids===null;$('selection-sound-enabled').checked=home.selection_sound_enabled!==false;}
  renderLibrary();renderHome();
 }
 const stageText={created:'Fayl kutilmoqda',receiving:'Kompyuterdan qabul qilinmoqda',queued:'Navbatda',telegram:'Telegramga yuborilmoqda',saving:'Katalogga saqlanmoqda',done:'Yakunlandi',error:'Yuklash bajarilmadi'};
@@ -147,7 +148,7 @@ function renderJob(job){
   card.append(error,bottom);$('upload-list').prepend(card);
  }
  card.querySelector('.job-name').textContent=job.title||job.filename;
- card.querySelector('.job-meta').textContent={video:'Video',banner:'Banner',poster:'Kartochka rasmi'}[job.kind]+' / '+job.filename+' / '+bytes(job.size);
+ card.querySelector('.job-meta').textContent={video:'Video',banner:'Banner',poster:'Kartochka rasmi',logo:'Film logosi'}[job.kind]+' / '+job.filename+' / '+bytes(job.size);
  const status=card.querySelector('.upload-stage');status.textContent=stageText[job.stage]||job.stage;status.className='upload-stage '+job.stage;
  const local=xhrUploads.get(job.id),received=Math.max(job.received||0,local?.loaded||0);
  for(const [phase,value]of [['receive',received],['telegram',job.sent||0]]){
@@ -209,9 +210,9 @@ async function runBatch(batch){
    }else result=await uploadFile(step.kind,step.file,batch.movieId,undefined);
   }
   await loadData();editing=batch.movieId;pendingBatch=null;
-  for(const kind of ['banner','poster'])$(kind+'-file').value='';
+  for(const kind of ['banner','poster','logo'])$(kind+'-file').value='';
   $('save-movie').textContent='Ozgarishlarni saqlash';$('editor-status').textContent='Saqlandi. Film ID: '+batch.movieId;toast('Film va tanlangan rasmlar saqlandi.');
-  if(!batch.steps.length)page('library');
+  if(!batch.steps.length&&!$('page-editor').querySelector('.series-management:not([hidden])'))page('library');
  }catch(error){
   batch.failedJobId=error.jobId||batch.failedJobId;
   if(!batch.failedJobId)pendingBatch=null;
@@ -221,10 +222,10 @@ async function runBatch(batch){
 $('movie-form').onsubmit=async event=>{
  event.preventDefault();if(busy)return;
  if(pendingBatch?.failedJobId){await runBatch(pendingBatch);return;}
- const banner=$('banner-file').files[0],poster=$('poster-file').files[0],target=editing;
+ const banner=$('banner-file').files[0],poster=$('poster-file').files[0],logo=$('logo-file').files[0],target=editing;
  if(!target){toast('Avval botdan yuklangan filmni tanlang.');return;}
  const metadata={title:$('movie-title').value,description:$('movie-description').value,type:$('movie-type').value,year:$('movie-year').value,rating:$('movie-rating').value,genres:selectedGenres()};
- const steps=[];if(banner)steps.push({kind:'banner',file:banner});if(poster)steps.push({kind:'poster',file:poster});
+ const steps=[];if(banner)steps.push({kind:'banner',file:banner});if(poster)steps.push({kind:'poster',file:poster});if(logo)steps.push({kind:'logo',file:logo});
  pendingBatch={metadata,steps,index:0,movieId:target,needsMetadata:true,metadataSaved:false};
  $('editor-status').textContent='Yuklash boshlandi. Sahifani ochiq qoldiring.';await runBatch(pendingBatch);
 };
@@ -243,4 +244,7 @@ async function init(){
  catch(error){showAuth(false);$('auth-error').textContent=error.message;}
 }
 window.addEventListener('beforeunload',()=>{for(const url of previews.values())URL.revokeObjectURL(url);});
+const seriesEditor=installAdminSeries({api,toast,getMovies:()=>movies,openEditor,reload:loadData});
+$('selection-sound-enabled').onchange=()=>homeDirty=true;
+$('clear-logo').onclick=async()=>{if(!editing||busy)return;try{await api('/movies/'+editing,{method:'PATCH',body:{clear_logo:true}});await loadData();await openEditor(editing);toast('Logo olib tashlandi.');}catch(error){toast(error.message);}};
 if(API_BASE&&new URL(API_BASE).origin!==location.origin)location.replace(API_BASE+'/admin/');else init();

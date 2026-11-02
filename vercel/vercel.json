@@ -40,6 +40,10 @@
     {
       "source": "/api/manage/:path*",
       "destination": "/api/manage?route=:path*"
+    },
+    {
+      "source": "/title/:id",
+      "destination": "/index.html"
     }
   ]
 }

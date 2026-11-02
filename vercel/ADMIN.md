@@ -77,3 +77,8 @@ npm run build
 
 Avtomatik testlar ajratilgan baza va test Telegram adapteri bilan bajariladi;
 haqiqiy botga sinov xabarlari yuborilmaydi.
+
+
+## Seriallar va logolar
+
+Fasl, qism, film logosi va tanlash ovozini boshqarish: [SERIALS.md](SERIALS.md).

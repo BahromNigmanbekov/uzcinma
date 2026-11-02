@@ -1,3 +1,4 @@
+import {ensureSeriesSchema,availabilitySQL,createCollection,saveSeason,removeSeason,attachEpisode,detachEpisode,restoreTitle,titleDetails,titleRow} from './series.js';
 import {imageType,telegramImage,MAX_IMAGE_BYTES} from './image-media.js';
 import {randomBytes,randomUUID,createHash,scrypt,timingSafeEqual} from 'node:crypto';
 import {promisify} from 'node:util';
@@ -39,7 +40,7 @@ function jobDTO(row){
 }
 export function createCloudManage({db,config=process.env,transport=uploadToTelegram,telegramCheck,now=()=>Date.now()}){
  let ready;
- const init=()=>ready??=(async()=>{await db.batch(schema,'write');})().catch(error=>{ready=undefined;throw error;});
+ const init=()=>ready??=(async()=>{await db.batch(schema,'write');await ensureSeriesSchema(db);})().catch(error=>{ready=undefined;throw error;});
  const auth=()=>passwordConfig(config.ADMIN_PASSWORD_HASH);
  const authVersion=()=>sha(config.ADMIN_PASSWORD_HASH||'');
  function origin(req){
@@ -78,7 +79,7 @@ export function createCloudManage({db,config=process.env,transport=uploadToTeleg
  async function movie(id){
   const row=(await db.execute({sql:'SELECT * FROM movies WHERE id=?',args:[movieId(id)]})).rows[0];if(!row)throw fault('Film topilmadi.',404);return row;
  }
- async function settings(){const result=await db.execute("SELECT value FROM site_settings WHERE key='home'");let value={};try{value=JSON.parse(result.rows[0]?.value||'{}');}catch{}return {hero_ids:value.hero_ids??null,recommendation_ids:value.recommendation_ids??null};}
+ async function settings(){const result=await db.execute("SELECT value FROM site_settings WHERE key='home'");let value={};try{value=JSON.parse(result.rows[0]?.value||'{}');}catch{}return {hero_ids:value.hero_ids??null,recommendation_ids:value.recommendation_ids??null,selection_sound_enabled:value.selection_sound_enabled!==false};}
  const jobColumns='id,kind,movie_id,filename,mime,size,received,sent,stage,error,telegram_result,lease_until,created,updated';
  async function getJob(id,withData=false){
   const row=(await db.execute({sql:'SELECT '+jobColumns+(withData?',file_data':'')+' FROM admin_upload_jobs WHERE id=?',args:[id]})).rows[0];if(!row)throw fault('Yuklash topilmadi.',404);
@@ -100,7 +101,7 @@ export function createCloudManage({db,config=process.env,transport=uploadToTeleg
     const result=await transport({
      base:config.BOT_API_BASE||'https://api.telegram.org',token:config.BOT_TOKEN,chatId:config.ADMIN_USER_ID,
      kind:row.kind,data:Buffer.from(row.file_data),filename:row.filename,mime:row.mime,
-     caption:(row.kind==='banner'?'Banner':'Poster')+' | Film ID: '+row.movie_id,
+     caption:({banner:'Banner',poster:'Poster',logo:'Logo'}[row.kind])+' | Film ID: '+row.movie_id,
      signal:AbortSignal.timeout(40000),
      progress:sent=>{
       const step=Math.floor(sent/Number(row.size)*4);if(step===last)return;last=step;
@@ -113,7 +114,7 @@ export function createCloudManage({db,config=process.env,transport=uploadToTeleg
     row.telegram_result=JSON.stringify({file_id:photo.file_id});
     await db.execute({sql:"UPDATE admin_upload_jobs SET telegram_result=?,sent=size,stage='saving',updated=? WHERE id=?",args:[row.telegram_result,now(),id]});
    }
-   const accepted=JSON.parse(row.telegram_result),column=row.kind==='banner'?'banner_file_id':'poster_file_id',urlColumn=row.kind==='banner'?'backdrop_url':'poster_url';
+   const accepted=JSON.parse(row.telegram_result),column=row.kind==='logo'?'logo_file_id':row.kind==='banner'?'banner_file_id':'poster_file_id',urlColumn=row.kind==='logo'?'logo_url':row.kind==='banner'?'backdrop_url':'poster_url';
    await db.batch([
     {sql:'UPDATE movies SET '+column+'=?,'+urlColumn+'=NULL,updated_at=? WHERE id=?',args:[accepted.file_id,now(),Number(row.movie_id)]},
     {sql:"UPDATE admin_upload_jobs SET stage='done',error=NULL,sent=size,file_data=NULL,lease_until=0,updated=? WHERE id=?",args:[now(),id]}
@@ -147,14 +148,30 @@ export function createCloudManage({db,config=process.env,transport=uploadToTeleg
     return send(res,200,{ok:true});
    }
    if(path==='/movies'&&method==='GET'){
-    const result=await db.execute('SELECT m.*,EXISTS(SELECT 1 FROM sources s WHERE s.movie_id=m.id) AS available FROM movies m ORDER BY m.id DESC');
+    const result=await db.execute('SELECT m.*,'+availabilitySQL()+' AS available FROM movies m WHERE m.collection_id IS NULL ORDER BY m.id DESC');
     const movies=result.rows.map(row=>({...movieDTO(row),size:Number(row.file_size)||0,deleted:Boolean(row.deleted),has_banner:Boolean(row.banner_file_id||row.backdrop_url),has_poster:Boolean(row.poster_file_id||row.poster_url)}));
     return send(res,200,{movies,home:await settings(),genres:GENRES});
    }
+   if(path==='/collections'&&method==='POST')return send(res,201,{movie:await createCollection(db,await jsonBody(req))});
+   const collectionRoute=/^\/collections\/([1-9]\d{0,14})(?:\/(seasons|episodes)(?:\/([1-9]\d*))?)?$/.exec(path);
+   if(collectionRoute){
+    const [,id,action,number]=collectionRoute;
+    if(!action&&method==='GET')return send(res,200,await titleDetails(db,id,{...Object.fromEntries(new URL(req.url,'http://localhost').searchParams),admin:true}));
+    if(action==='seasons'&&method==='POST')return send(res,200,await saveSeason(db,id,await jsonBody(req)));
+    if(action==='seasons'&&number&&method==='DELETE')return send(res,200,await removeSeason(db,id,number));
+    if(action==='episodes'&&method==='POST')return send(res,200,await attachEpisode(db,id,await jsonBody(req)));
+   }
+   const detachRoute=/^\/episodes\/([1-9]\d{0,14})\/detach$/.exec(path);
+   if(detachRoute&&method==='POST')return send(res,200,await detachEpisode(db,detachRoute[1]));
    const movieRoute=/^\/movies\/([1-9]\d{0,14})$/.exec(path);
+   if(movieRoute&&method==='GET'){
+    const row=await titleRow(db,movieRoute[1]);
+    return send(res,200,{movie:{...movieDTO(row),deleted:Boolean(row.deleted),has_banner:Boolean(row.banner_file_id||row.backdrop_url),has_poster:Boolean(row.poster_file_id||row.poster_url)}});
+   }
    if(movieRoute&&method==='PATCH'){
     const row=await movie(movieRoute[1]),body=await jsonBody(req);
-    if('deleted' in body){if(typeof body.deleted!=='boolean')throw fault('Holat notogri.');await db.execute({sql:'UPDATE movies SET deleted=?,updated_at=? WHERE id=?',args:[body.deleted?1:0,now(),row.id]});}
+    if('deleted' in body){if(typeof body.deleted!=='boolean')throw fault('Holat notogri.');await restoreTitle(db,row.id,body.deleted);}
+    else if(body.clear_logo===true)await db.execute({sql:'UPDATE movies SET logo_file_id=NULL,logo_url=NULL,updated_at=? WHERE id=?',args:[now(),row.id]});
     else{const meta=validateMovie(body);await db.execute({sql:'UPDATE movies SET title=?,description=?,genres=?,type=?,year=?,rating=?,updated_at=? WHERE id=?',args:[meta.title,meta.description,JSON.stringify(meta.genres),meta.type,meta.year,meta.rating,now(),row.id]});}
     return send(res,200,{ok:true});
    }
@@ -164,8 +181,9 @@ export function createCloudManage({db,config=process.env,transport=uploadToTeleg
      if(body[key]===null){home[key]=null;continue;}
      if(!Array.isArray(body[key])||body[key].length>12)throw fault('Bosh sahifa royxati notogri.');
      home[key]=[...new Set(body[key].map(id=>String(movieId(id))))];
-     for(const id of home[key])if((await movie(id)).deleted)throw fault('Yashirilgan filmni bosh sahifaga qoshmang.');
+     for(const id of home[key]){const row=await movie(id);if(row.deleted||row.collection_id)throw fault('Bosh sahifaga faol film yoki serialning ozini tanlang.');}
     }
+    home.selection_sound_enabled=typeof body.selection_sound_enabled==='boolean'?body.selection_sound_enabled:(await settings()).selection_sound_enabled;
     await db.execute({sql:"INSERT INTO site_settings(key,value) VALUES('home',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",args:[JSON.stringify(home)]});
     return send(res,200,{ok:true});
    }
@@ -184,7 +202,7 @@ export function createCloudManage({db,config=process.env,transport=uploadToTeleg
    }
    if(path==='/jobs'&&method==='POST'){
     const body=await jsonBody(req);
-    if(!['banner','poster'].includes(body.kind))throw fault('Videoni bevosita Telegram botga yuboring.');
+    if(!['banner','poster','logo'].includes(body.kind))throw fault('Videoni bevosita Telegram botga yuboring.');
     if(!config.BOT_TOKEN||!config.ADMIN_USER_ID)throw fault('Bot sozlamalari yetishmayapti.',503);
     const size=Number(body.size);
     if(!Number.isSafeInteger(size)||size<1||size>MAX_IMAGE)throw fault('Rasm 2 MB dan oshmasin.',413);

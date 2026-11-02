@@ -9,7 +9,7 @@ export async function uploadToTelegram({base,token,chatId,kind,path,data,filenam
  const video=kind==='video'&&/\.(mp4|m4v)$/i.test(filename);
  const method=kind==='video'?(video?'sendVideo':'sendDocument'):'sendDocument',field=video?'video':'document';
  const boundary='uzcinma-'+randomBytes(18).toString('hex');
- const fields={chat_id:String(chatId),caption:caption.slice(0,1024),...(video?{supports_streaming:'true'}:{}),...(['banner','poster'].includes(kind)?{disable_content_type_detection:'true'}:{})};
+ const fields={chat_id:String(chatId),caption:caption.slice(0,1024),...(video?{supports_streaming:'true'}:{}),...(['banner','poster','logo'].includes(kind)?{disable_content_type_detection:'true'}:{})};
  const lead=Object.entries(fields).map(([key,value])=>'--'+boundary+'\r\nContent-Disposition: form-data; name="'+key+'"\r\n\r\n'+value+'\r\n').join('');
  const safeName=filename.replace(/[\r\n"\\]/g,'_').slice(0,150)||'upload.bin';
  const before=Buffer.from(lead+'--'+boundary+'\r\nContent-Disposition: form-data; name="'+field+'"; filename="'+safeName+'"\r\nContent-Type: '+mime+'\r\n\r\n');

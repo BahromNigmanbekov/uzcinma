@@ -8,7 +8,7 @@ const results=[],errors=[];
 const check=(value,label)=>{assert.ok(value,label);results.push(label);console.log('PASS '+label);};
 async function start(page){
  page.on('pageerror',e=>errors.push(e.message));await page.clock.install();await page.goto(base);
- await page.locator('#movie-grid .poster-button').first().click();await page.locator('#detail-play').click();
+ await page.locator('#movie-grid .poster-button').first().click();await page.locator('.title-play').click();
  await page.waitForFunction(()=>document.getElementById('video').currentTime>.25,{},{timeout:15000});
 }
 async function visible(page){

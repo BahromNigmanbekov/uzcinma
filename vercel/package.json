@@ -19,7 +19,8 @@
     "test:controls": "node tests/player-controls.browser.mjs",
     "test:banner": "node tests/banner.browser.mjs",
     "admin:server": "node scripts/admin-server.mjs",
-    "test:admin": "node tests/admin.browser.mjs"
+    "test:admin": "node tests/admin.browser.mjs",
+    "test:series": "npm run build && node tests/series.browser.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

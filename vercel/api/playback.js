@@ -1,3 +1,4 @@
+import {ensureSeriesSchema,visibleSQL} from '../server/series.js';
 import {bundledCatalog} from '../server/bundled.js';
 
 import {database,demoEnabled,parseId,send,fail,query,telegramMediaReady} from '../server/core.js';
@@ -20,8 +21,8 @@ export default async function handler(req,res){
    if(id==='demo-bunny')return send(res,200,{kind:'hls',url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',demo:true,subtitles:[]});
    return send(res,409,{error:'Bu dizayn namunasi. Filmning video manbasi hali ulanmagan.'});
   }
-  const db=database();const n=parseId(id);
-  const film=await db.execute({sql:'SELECT id,source_message_id,file_size,updated_at FROM movies WHERE id=? AND deleted=0',args:[n]});if(!film.rows.length)return send(res,404,{error:'Film topilmadi.'});
+  const db=database();await ensureSeriesSchema(db);const n=parseId(id);
+  const film=await db.execute({sql:'SELECT m.id,m.source_message_id,m.file_size,m.updated_at FROM movies m WHERE m.id=? AND '+visibleSQL('m'),args:[n]});if(!film.rows.length)return send(res,404,{error:'Film topilmadi.'});
   const data=await db.execute({sql:'SELECT quality,url FROM sources WHERE movie_id=?',args:[n]});
   const hls=data.rows.find(r=>r.quality==='hls');if(hls)return send(res,200,{kind:'hls',url:hls.url,subtitles:[]});
   const variants=data.rows.map(r=>({quality:r.quality,url:r.url})).sort((a,b)=>Number(a.quality)-Number(b.quality));

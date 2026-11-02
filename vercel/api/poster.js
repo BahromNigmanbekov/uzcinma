@@ -1,11 +1,13 @@
+import {ensureSeriesSchema,visibleSQL} from '../server/series.js';
 import {imageType,MAX_IMAGE_BYTES} from '../server/image-media.js';
 
 import {database,parseId,telegram,send,fail,query} from '../server/core.js';
 export default async function handler(req,res){
  if(req.method!=='GET')return send(res,405,{error:'Method not allowed'});
  try{
-  const params=query(req),id=parseId(params.id);const column=params.kind==='banner'?'banner_file_id':'poster_file_id';
-  const result=await database().execute({sql:'SELECT '+column+' AS image_file_id FROM movies WHERE id=? AND deleted=0',args:[id]});
+  const params=query(req),id=parseId(params.id);const column=params.kind==='logo'?'logo_file_id':params.kind==='banner'?'banner_file_id':'poster_file_id';
+  const db=database();await ensureSeriesSchema(db);
+  const result=await db.execute({sql:'SELECT '+column+' AS image_file_id FROM movies m WHERE m.id=? AND '+visibleSQL('m'),args:[id]});
   const fileId=result.rows[0]?.image_file_id;if(!fileId)return send(res,404,{error:'Poster topilmadi'});
   const file=await telegram('getFile',{file_id:fileId});
   if(file.file_size>MAX_IMAGE_BYTES)return send(res,413,{error:'Poster juda katta'});
