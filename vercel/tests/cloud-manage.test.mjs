@@ -19,9 +19,9 @@ async function fixture({failTransport=0,failSaving=false,authConfigured=true}={}
   return db.batch(statements,...args);
  }};
  const options={db:wrapped,config,now:()=>clock,telegramCheck:async()=>({ok:true,result:{username:'uzcinma_test_bot'}}),transport:async input=>{
-  calls++;assert.ok(Buffer.isBuffer(input.data));assert.ok(input.data.length>0);input.progress(input.data.length,input.data.length);
+  calls++;assert.ok(Buffer.isBuffer(input.data));assert.ok(input.data.length>0);assert.deepEqual(input.data,png);input.progress(input.data.length,input.data.length);
   if(calls<=failTransport)throw Error('Injected Telegram failure');
-  return {photo:[{file_id:'private-photo-'+input.kind+'-'+calls,file_unique_id:'photo-'+calls}]};
+  return {document:{file_id:'private-document-'+input.kind+'-'+calls,file_unique_id:'image-'+calls,mime_type:input.mime,file_size:input.data.length}};
  }};
  let service=createCloudManage(options),cookie='',csrf='';
  const server=createServer((req,res)=>{req.query=Object.fromEntries(new URL(req.url,'http://localhost').searchParams);service.handle(req,res);});
@@ -75,7 +75,7 @@ test('image uploads survive a function restart, retry after acceptance without r
   f.restart();result=await f.request('/jobs/'+id+'/retry',{method:'POST'});assert.equal(result.data.job.stage,'error');assert.equal(result.data.job.accepted_by_telegram,true);assert.equal(f.calls,2);
   f.restart();result=await f.request('/jobs/'+id+'/retry',{method:'POST'});assert.equal(result.data.job.stage,'done');assert.equal(f.calls,2);
   const row=(await f.db.execute('SELECT banner_file_id,backdrop_url FROM movies WHERE id=1')).rows[0];assert.ok(row.banner_file_id);assert.equal(row.backdrop_url,null);
-  const jobs=(await f.request('/jobs')).data.jobs;assert.equal(jobs[0].stage,'done');assert.equal(JSON.stringify(jobs).includes('private-photo'),false);
+  const jobs=(await f.request('/jobs')).data.jobs;assert.equal(jobs[0].stage,'done');assert.equal(JSON.stringify(jobs).includes('private-document'),false);
   const poster=await f.request('/jobs',{method:'POST',body:{kind:'poster',size:png.length,filename:'poster.png',mime:'image/png',movie_id:1}});
   await f.request('/jobs/'+poster.data.job.id+'/file',{method:'PUT',raw:png});
   assert.ok((await f.db.execute('SELECT poster_file_id FROM movies WHERE id=1')).rows[0].poster_file_id);

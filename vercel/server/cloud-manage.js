@@ -1,9 +1,10 @@
+import {imageType,telegramImage,MAX_IMAGE_BYTES} from './image-media.js';
 import {randomBytes,randomUUID,createHash,scrypt,timingSafeEqual} from 'node:crypto';
 import {promisify} from 'node:util';
 import {GENRES,movieDTO,send,authorize} from './core.js';
 import {validateMovie} from './movie-validation.js';
 import {uploadToTelegram} from './admin-telegram.js';
-const derive=promisify(scrypt),MAX_IMAGE=2*1024*1024,SESSION_MS=8*3600*1000;
+const derive=promisify(scrypt),MAX_IMAGE=MAX_IMAGE_BYTES,SESSION_MS=8*3600*1000;
 const fault=(message,status=400)=>Object.assign(Error(message),{status});
 const sha=value=>createHash('sha256').update(value).digest('hex');
 const movieId=value=>{if(!/^[1-9]\d{0,14}$/.test(String(value)))throw fault('Film ID notogri.');return Number(value);};
@@ -35,12 +36,6 @@ function pathOf(req){
 }
 function jobDTO(row){
  return {id:row.id,kind:row.kind,filename:row.filename,mime:row.mime,size:Number(row.size),received:Number(row.received),sent:Number(row.sent),stage:row.stage,error:row.error||null,movie_id:String(row.movie_id),title:'',created:Number(row.created),accepted_by_telegram:Boolean(row.telegram_result),can_retry:row.stage==='error'&&(Boolean(row.telegram_result)||Number(row.received)===Number(row.size))};
-}
-function imageType(body){
- if(body.length>=8&&body.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))return 'image/png';
- if(body.length>=3&&body[0]===255&&body[1]===216&&body[2]===255)return 'image/jpeg';
- if(body.length>=12&&body.subarray(0,4).toString()==='RIFF'&&body.subarray(8,12).toString()==='WEBP')return 'image/webp';
- throw fault('JPG, PNG yoki WebP rasm tanlang.');
 }
 export function createCloudManage({db,config=process.env,transport=uploadToTelegram,telegramCheck,now=()=>Date.now()}){
  let ready;
@@ -113,7 +108,7 @@ export function createCloudManage({db,config=process.env,transport=uploadToTeleg
      }
     });
     await progress;
-    const photo=result.photo?.at(-1);
+    const photo=telegramImage(result);
     if(!photo?.file_id)throw Error('Telegram rasm tasdigini qaytarmadi.');
     row.telegram_result=JSON.stringify({file_id:photo.file_id});
     await db.execute({sql:"UPDATE admin_upload_jobs SET telegram_result=?,sent=size,stage='saving',updated=? WHERE id=?",args:[row.telegram_result,now(),id]});

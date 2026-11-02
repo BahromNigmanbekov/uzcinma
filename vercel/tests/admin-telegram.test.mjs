@@ -19,7 +19,7 @@ test('multipart Telegram transport streams bytes and reports real API rejections
  try{
   const result=await uploadToTelegram(options);assert.equal(result.message_id,1);assert.ok(updates.length>1);assert.equal(updates.at(-1),bytes.length);assert.ok(lastSize>bytes.length);
   await uploadToTelegram({...options,filename:'video.webm'});assert.ok(lastPath.endsWith('/sendDocument'));
-  const photo=Buffer.alloc(150000,29),photoProgress=[];await uploadToTelegram({...options,kind:'banner',path:undefined,data:photo,filename:'banner.jpg',mime:'image/jpeg',progress:n=>photoProgress.push(n)});assert.ok(lastPath.endsWith('/sendPhoto'));assert.ok(lastBody.includes(photo));assert.equal(photoProgress.at(-1),photo.length);
+  const photo=Buffer.alloc(150000,29),photoProgress=[];await uploadToTelegram({...options,kind:'banner',path:undefined,data:photo,filename:'banner.jpg',mime:'image/jpeg',progress:n=>photoProgress.push(n)});assert.ok(lastPath.endsWith('/sendDocument'));assert.ok(lastBody.includes(photo));assert.ok(lastBody.includes(Buffer.from('name="document"')));assert.ok(lastBody.includes(Buffer.from('name="disable_content_type_detection"')));assert.equal(photoProgress.at(-1),photo.length);
   rejectNext=true;await assert.rejects(()=>uploadToTelegram(options),/file is too big/);assert.equal(requests,4);
  }finally{await new Promise(resolve=>server.close(resolve));if(dirname(directory)===tmpdir()&&basename(directory).startsWith('uzcinma-transport-'))await rm(directory,{recursive:true,force:true});}
 });

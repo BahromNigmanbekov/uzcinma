@@ -1,5 +1,6 @@
 import './style.css';
 import './branding.css';
+import './catalog.css';
 import {setImage,setHeroBackground,setVideoPoster,DEFAULT_BANNER} from './artwork.js';
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -105,11 +106,11 @@ $('search').oninput=e=>{state.q=e.target.value.trim();delayed();$('movies').scro
 $('search').onkeydown=e=>{if(e.key==='Escape')searchPanel(false);};
 $('rating').oninput=e=>{state.rating=Number(e.target.value);$('rating-value').textContent=state.rating.toFixed(1);delayed();};
 function heroSlide(movie){
- const slide=el('article','swiper-slide hero-slide');let backdrop=movie.backdrop||DEFAULT_BANNER;if(backdrop==='/assets/hero.webp'&&innerWidth*devicePixelRatio<=850)backdrop='/assets/hero-small.webp';setHeroBackground(slide,backdrop);
+ const slide=el('article','swiper-slide hero-slide');slide.dataset.movieId=movie.id;let backdrop=movie.backdrop||DEFAULT_BANNER;if(backdrop==='/assets/hero.webp'&&innerWidth*devicePixelRatio<=850)backdrop='/assets/hero-small.webp';slide.dataset.backdrop=backdrop;
  const content=el('div','hero-content');const duration=Number(movie.duration)||0;
  content.append(el('p','hero-duration',duration?'Davomiyligi: '+formatTime(duration):types[movie.type]||'Kino'));
  const rating=el('div','hero-rating');if(movie.rating){rating.append(el('span','star','\u2605'),el('strong','',Number(movie.rating).toFixed(1)));}
- rating.append(el('span','hero-genres',(movie.genres||[]).map(g=>genres[g]||g).join(' | ')));content.append(rating,el('h1','',movie.title));
+ rating.append(el('span','hero-genres',(movie.genres||[]).map(g=>genres[g]||g).join(' | ')));content.append(rating,el('h1','',movie.title));content.querySelector('h1').title=movie.title;
  let description=movie.description||'Yangi filmlar, sevimli hikoyalar va katta sarguzashtlar.';
  if(movie.id==='demo-rampage')description="Uchta hayvon xavfli tajriba ta'sirida ulkan maxluqlarga aylanadi. Davis Okoye Chikagoni qutqarish uchun kurashadi.";
  content.append(el('p','hero-description',description));
@@ -121,21 +122,29 @@ function heroSlide(movie){
 }
 // Allow dragging from poster buttons while keeping normal taps and keyboard activation.
 const swipeOptions={grabCursor:true,threshold:5,longSwipesRatio:.1,focusableElements:'input, select, option, textarea, video, label'};
+function loadHeroArtwork(swiper){
+ for(const index of [swiper.activeIndex,(swiper.activeIndex+1)%swiper.slides.length]){const slide=swiper.slides[index];if(slide&&!slide.dataset.artworkLoaded){setHeroBackground(slide,slide.dataset.backdrop);slide.dataset.artworkLoaded='1';}}
+}
 function renderHero(){
+ const previousId=heroSwiper?.slides[heroSwiper.activeIndex]?.dataset.movieId;
  const preferred=['demo-rampage','demo-jurassic','demo-bunny'];
  const films=Array.isArray(state.home?.hero)?state.home.hero:state.mode==='demo'?preferred.map(id=>pool.get(id)).filter(Boolean):[...boot].sort((a,b)=>Number(b.available)-Number(a.available)).slice(0,3);
  $('hero').hidden=Array.isArray(state.home?.hero)&&!films.length;document.body.classList.toggle('without-hero',$('hero').hidden);
- const holder=$('hero-slides');holder.replaceChildren(...films.map(heroSlide));
+ heroSwiper?.destroy();const holder=$('hero-slides');holder.replaceChildren(...films.map(heroSlide));
  if(!films.length)holder.append(heroSlide({title:'Kino olami',description:'Filmlar katalogga qo\'shilgach shu yerda chiqadi.',backdrop:DEFAULT_BANNER,id:'empty',available:false,genres:[]}));
- heroSwiper?.destroy();heroSwiper=new Swiper('#hero',{modules:[Pagination,A11y,Keyboard,EffectFade,Autoplay],...swipeOptions,autoplay:{delay:4000,disableOnInteraction:false,pauseOnMouseEnter:true,enabled:films.length>1},effect:'fade',fadeEffect:{crossFade:true},speed:matchMedia('(prefers-reduced-motion: reduce)').matches?0:500,loop:false,rewind:true,keyboard:{enabled:true,onlyInViewport:true},pagination:{el:'.hero-pagination',clickable:true},a11y:{enabled:true,paginationBulletMessage:'{{index}}-filmga o\'tish'}});
+ heroSwiper=new Swiper('#hero',{modules:[Pagination,A11y,Keyboard,EffectFade,Autoplay],...swipeOptions,autoplay:{delay:4000,disableOnInteraction:false,pauseOnMouseEnter:true,enabled:films.length>1},initialSlide:Math.max(0,films.findIndex(film=>film.id===previousId)),on:{slideChange:loadHeroArtwork},effect:'fade',fadeEffect:{crossFade:true},speed:matchMedia('(prefers-reduced-motion: reduce)').matches?0:500,loop:false,rewind:true,keyboard:{enabled:true,onlyInViewport:true},pagination:{el:'.hero-pagination',clickable:true},a11y:{enabled:true,paginationBulletMessage:'{{index}}-filmga o\'tish'}});
+ loadHeroArtwork(heroSwiper);
 }
-function renderTrends(){
+function renderTrends({preserve=false}={}){
  let films=boot.filter(m=>m.id!=='demo-bunny'&&(!state.trendGenre||m.genres.includes(state.trendGenre)));
  if(state.trend==='premieres')films=[...films].sort((a,b)=>b.year-a.year);
  if(state.trend==='recent')films=[...films].reverse();
  if(state.trend==='popular'&&state.mode!=='demo')films=[...films].sort((a,b)=>b.rating-a.rating);
+ const previousIndex=preserve?(trendSwiper?.activeIndex||0):0;trendSwiper?.destroy();
+ const count=Math.min(18,films.length),views=desired=>Math.min(desired,Math.max(1,count));
+ $('trends-empty').hidden=count>0;$('trend-swiper').closest('.trend-wrap').hidden=count===0;
  $('trending').replaceChildren(...films.slice(0,18).map(m=>{const slide=el('div','swiper-slide');slide.append(card(m));return slide;}));
- trendSwiper?.destroy();trendSwiper=new Swiper('#trend-swiper',{modules:[Navigation,A11y,Keyboard,Autoplay],...swipeOptions,rewind:true,autoplay:{delay:4000,disableOnInteraction:false,pauseOnMouseEnter:true,enabled:films.length>1},slidesPerView:2.2,spaceBetween:16,grabCursor:true,speed:350,breakpoints:{600:{slidesPerView:3.4,spaceBetween:20},850:{slidesPerView:4.4,spaceBetween:25},1100:{slidesPerView:6,spaceBetween:30}},navigation:{prevEl:'#trend-prev',nextEl:'#trend-next'},keyboard:{enabled:true,onlyInViewport:true},a11y:{enabled:true,prevSlideMessage:'Oldingi filmlar',nextSlideMessage:'Keyingi filmlar'}});
+ trendSwiper=new Swiper('#trend-swiper',{modules:[Navigation,A11y,Keyboard,Autoplay],...swipeOptions,rewind:true,autoplay:{delay:4000,disableOnInteraction:false,pauseOnMouseEnter:true,enabled:films.length>1},initialSlide:Math.min(previousIndex,Math.max(0,count-1)),slidesPerView:views(2.1),spaceBetween:14,watchOverflow:true,speed:350,breakpoints:{540:{slidesPerView:views(3.1),spaceBetween:18},800:{slidesPerView:views(4),spaceBetween:20},1100:{slidesPerView:views(5),spaceBetween:22},1440:{slidesPerView:views(6),spaceBetween:24}},navigation:{prevEl:'#trend-prev',nextEl:'#trend-next'},keyboard:{enabled:true,onlyInViewport:true},a11y:{enabled:true,prevSlideMessage:'Oldingi filmlar',nextSlideMessage:'Keyingi filmlar'}});
  updateSaved();
 }
 function demoFiltered(){
@@ -190,7 +199,7 @@ async function init(){
 }
 let refreshing=false;
 async function refreshUploadedVideos(){
- if(refreshing||state.provider!=='bot-export'||document.hidden)return;
+ if(refreshing||!['bot-export','telegram-live'].includes(state.provider)||document.hidden)return;
  refreshing=true;
  try{
   const response=await fetch(apiURL('/api/catalog?limit=60'),{cache:'no-store'});if(!response.ok)return;
@@ -200,7 +209,7 @@ async function refreshUploadedVideos(){
   const added=data.movies.some(m=>!pool.has(m.id));boot=data.movies;boot.forEach(m=>pool.set(m.id,m));for(const m of [...(state.home?.hero||[]),...(state.home?.recommendations||[])])pool.set(m.id,m);
   const refreshed=pool.get(player.movie.id);
   if(refreshed){const becameReady=!player.movie.available&&refreshed.available;player.movie=refreshed;heading(refreshed);if(!player.loaded)setVideoPoster($('video'),refreshed.backdrop);if(becameReady&&!player.loaded)player.message('Video tayyor. Ijro tugmasini bosing.');}
-  renderHero();renderTrends();
+  renderHero();renderTrends({preserve:true});
   const recommendations=Array.isArray(state.home?.recommendations)?state.home.recommendations:boot.slice(12,18);
   $('recommend-grid').replaceChildren(...recommendations.map(card));$('recommend-grid').closest('section').hidden=!recommendations.length;
   await loadCatalog();

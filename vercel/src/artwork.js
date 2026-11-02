@@ -9,11 +9,14 @@ export function setImage(image,source,kind='poster'){
 }
 
 export function setHeroBackground(node,source){
- const images=[...new Set([source||DEFAULT_BANNER,DEFAULT_BANNER])];
- node.style.backgroundImage=images.map(url=>'url('+JSON.stringify(url)+')').join(',');
- node.style.backgroundSize=images.map(url=>url===DEFAULT_BANNER?'var(--hero-default-size, cover)':'cover').join(',');
- node.style.backgroundRepeat='no-repeat';
- node.style.backgroundPosition=images.map(url=>url===DEFAULT_BANNER?'var(--hero-default-position, center)':'center 30%').join(',');
+ const apply=url=>{
+  node.style.backgroundImage='url('+JSON.stringify(url)+')';
+  node.style.backgroundSize=url===DEFAULT_BANNER?'var(--hero-default-size, cover)':'var(--hero-image-size, cover)';
+  node.style.backgroundPosition=url===DEFAULT_BANNER?'var(--hero-default-position, center)':'var(--hero-image-position, center 30%)';
+  node.style.backgroundRepeat='no-repeat';
+ };
+ apply(source||DEFAULT_BANNER);
+ if(source&&source!==DEFAULT_BANNER){const probe=new Image();probe.onerror=()=>apply(DEFAULT_BANNER);probe.src=source;}
 }
 
 const posterRequests=new WeakMap();

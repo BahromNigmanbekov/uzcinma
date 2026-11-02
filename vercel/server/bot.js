@@ -1,12 +1,13 @@
+import {telegramImage,MAX_IMAGE_BYTES} from './image-media.js';
 
 import {GENRES,QUALITIES,parseId,publicURL} from './core.js';
 const now=()=>Math.floor(Date.now()/1000);
 export async function processMessage(db,msg){
  const chat=msg.chat;if(chat?.type!=='private'||String(msg.from?.id)!==process.env.ADMIN_USER_ID)return null;
- const text=msg.text||(msg.photo?msg.caption:'')||'';const [cmd0,...parts]=text.trim().split(/\s+/);const cmd=cmd0?.split('@')[0];
+ const text=msg.text||msg.caption||'';const [cmd0,...parts]=text.trim().split(/\s+/);const cmd=cmd0?.split('@')[0];
  if(cmd==='/start'||cmd==='/help')return "Film yuboring. /list; /title ID yangi nom; /description ID tavsif; /genre ID action,drama; /source ID hls URL yoki /source ID 480 URL; /delete ID; /restore ID. /unsource ID 720; /backdrop ID HTTPS_URL; /posterurl ID HTTPS_URL. Banner rasmining captioni: /banner ID. Poster rasmining captioni: /poster ID. /meta ID 2018 6.5 movie";
  if(cmd==='/list'){const rows=await db.execute('SELECT id,title FROM movies WHERE deleted=0 ORDER BY id DESC LIMIT 20');return rows.rows.map(r=>r.id+'. '+r.title.slice(0,150)).join('\n')||'Hali film yoq.';}
- if(msg.video||msg.document){
+ if((msg.video||msg.document)&&!['/poster','/banner'].includes(cmd)){
   const media=msg.video||msg.document;const name=media.file_name||'Film';
   if(!msg.video&&!String(media.mime_type||'').startsWith('video/')&&!/\.(mp4|mkv|webm|mov|avi)$/i.test(name))return 'Video fayl yuboring.';
   const lines=(msg.caption||'').split('\n');const title=(lines.shift()||name).trim().slice(0,200);const description=lines.join('\n').slice(0,3000);
@@ -17,10 +18,11 @@ export async function processMessage(db,msg){
  if(!['/title','/description','/genre','/source','/delete','/restore','/poster','/banner','/posterurl','/backdrop','/unsource','/meta'].includes(cmd))return 'Buyruqlar: /help';
  let id;try{id=parseId(parts.shift());}catch{return 'Film ID kerak. Masalan: /title 3 Yangi nom';}
  const found=await db.execute({sql:'SELECT id FROM movies WHERE id=?',args:[id]});if(!found.rows.length)return 'Film topilmadi.';
- const updated=now();
+ const updated=Date.now();
  if(cmd==='/delete'||cmd==='/restore'){await db.execute({sql:'UPDATE movies SET deleted=?,updated_at=? WHERE id=?',args:[cmd==='/delete'?1:0,updated,id]});return cmd==='/delete'?'Film katalogdan yashirildi. Tiklash: /restore '+id:'Film tiklandi.';}
  if(cmd==='/poster'||cmd==='/banner'){
-  const file=msg.photo?.filter(p=>(p.file_size||0)<=2*1024*1024).at(-1);if(!file)return 'Rasm yuboring, caption: '+cmd+' '+id;
+  const file=telegramImage(msg);if(!file)return 'Rasmni fayl sifatida yuboring, caption: '+cmd+' '+id;
+  if(Number(file.file_size||0)>MAX_IMAGE_BYTES)return 'Rasm 2 MB dan oshmasin. JPG yoki WebP fayl yuboring.';
   const column=cmd==='/banner'?'banner_file_id':'poster_file_id',urlColumn=cmd==='/banner'?'backdrop_url':'poster_url';
   await db.execute({sql:'UPDATE movies SET '+column+'=?,'+urlColumn+'=NULL,updated_at=? WHERE id=?',args:[file.file_id,updated,id]});return cmd==='/banner'?'Banner saqlandi.':'Poster saqlandi.';
  }

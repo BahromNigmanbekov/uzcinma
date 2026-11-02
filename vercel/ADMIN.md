@@ -2,7 +2,7 @@
 
 ## Internetdagi panel
 
-https://uzcinma.vercel.app/admin/
+https://uzcinma.uz/admin/
 
 Avvalgi admin parolingiz bilan kiring. Bot tokeni yoki parolni chatga yuborish kerak emas.
 Panel jonli Turso bazasiga ulanadi. Noutbuk yoqilgan bo'lishi shart emas.
@@ -17,10 +17,11 @@ Webhook yangi filmlarni jonli bazaga yozadi. Panel ro'yxati har 5 soniyada yangi
 3. Xohlasangiz banner va kartochka rasmini tanlang.
 4. **O'zgarishlarni saqlash** ni bosing.
 
-Banner va poster Telegram botga yuboriladi, file_id jonli katalogda saqlanadi.
+Banner va poster Telegramga hujjat (sendDocument) sifatida yuboriladi: Telegram foto sifatida qayta siqmaydi. File_id jonli katalogda saqlanadi.
 Rasmning serverga yuborilishi va Telegramga uzatilishi panelda ko'rinadi.
-JPG, PNG va WebP qabul qilinadi. Katta rasmlar brauzerda 2 MB gacha tayyorlanadi;
-bu faqat banner/posterga tegishli, video o'zgartirilmaydi.
+JPG, PNG va WebP qabul qilinadi. 2 MB gacha fayllar ozgartirilmaydi. Katta rasmlar avval asl olchamida yuqori sifatli WebP qilib tayyorlanadi; zarur bolsa olchami kamayadi.
+Bu faqat banner/posterga tegishli, video ozgartirilmaydi.
+Banner uchun 2560 x 1440 yoki kamida 1920 x 1080 manba tavsiya etiladi. Oldin kichraytirilgan rasmlar avtomatik tiklanmaydi; asl faylni qayta yuklash kerak.
 Rasm tanlanmasa yoki ochilmasa, standart Uzcinma rasmi chiqadi.
 Videoni paneldan yuklash yoki almashtirish yo'q.
 

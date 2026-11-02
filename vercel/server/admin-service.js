@@ -1,3 +1,4 @@
+import {telegramImage} from './image-media.js';
 import {validateMovie} from './movie-validation.js';
 export {validateMovie} from './movie-validation.js';
 import {createClient} from '@libsql/client';
@@ -76,7 +77,7 @@ export async function createAdminService(options={}){
     delete job.controller;await persist(job);
    }
    job.stage='saving';await persist(job);
-   const message=job.telegramResult,media=job.kind==='video'?(message.video||message.document):message.photo?.at(-1);
+   const message=job.telegramResult,media=job.kind==='video'?(message.video||message.document):telegramImage(message);
    if(!media?.file_id||!media.file_unique_id||!message.chat?.id||!message.message_id)throw fault('Telegram fayl tasdigini qaytarmadi.',502);
    const cached=join(cache,createHash('sha256').update(media.file_unique_id).digest('hex'));
    await copyFile(join(jobRoot,job.id,'file.bin'),cached);

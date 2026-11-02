@@ -1,6 +1,7 @@
 # Uzcinma
 
-Sayt: https://uzcinma.vercel.app  
+Sayt: https://uzcinma.uz
+
 Bot: https://t.me/uzcinma_file_bot
 
 ## Botdan saytga
@@ -21,7 +22,7 @@ Vercel production Environment Variables:
 - TELEGRAM_WEBHOOK_SECRET ? Telegram webhook autentifikatsiyasi.
 - ADMIN_API_SECRET ? himoyalangan sozlash/import API kaliti.
 - ADMIN_PASSWORD_HASH ? admin parolining scrypt xeshi, JSON ichida salt va hash. Server uchun maxfiy sozlama.
-- APP_ORIGIN=https://uzcinma.vercel.app
+- APP_ORIGIN=https://uzcinma.uz
 - CATALOG_MODE=database
 - DEMO_MODE=0
 
@@ -49,7 +50,7 @@ Eski polling bot bir vaqtda ishlatilmaydi. Webhook holatini Telegram getWebhookI
 /restore 6
 ~~~
 
-Banner uchun photo yuboring, caption: /banner 6. Kartochka rasmi uchun /poster 6.
+Asl sifat uchun rasmni Telegramda File sifatida yuboring: banner captioni /banner 6, kartochka captioni /poster 6. JPG, PNG va WebP qabul qilinadi; rasm 2 MB gacha. Oddiy Telegram foto ham ishlaydi, ammo Telegram uni qayta siqishi mumkin.
 Rasm bo'lmasa Uzcinma standart rasmi chiqadi.
 Mavjud tashqi sifat variantini ulash: /source 6 720 https://media.example/film.mp4.
 
@@ -62,7 +63,7 @@ npm run dev
 
 Sayt: http://localhost:5176. Lokal admin: http://localhost:5176/admin/.
 
-Internetdagi admin: https://uzcinma.vercel.app/admin/. U /api/manage orqali jonli Turso bazasida nom, kategoriya, banner/poster, bosh sahifa tanlovi va o'chirish/tiklashni boshqaradi. Videolar bevosita botga yuboriladi. Kirish sessiyalari va rasm yuklash holatlari bazada saqlanadi.
+Internetdagi admin: https://uzcinma.uz/admin/. U /api/manage orqali jonli Turso bazasida nom, kategoriya, banner/poster, bosh sahifa tanlovi va o'chirish/tiklashni boshqaradi. Videolar bevosita botga yuboriladi. Kirish sessiyalari va rasm yuklash holatlari bazada saqlanadi.
 
 Lokal admin eski movies.sqlite3 bilan ishlaydi; internetdagi katalogni boshqarish uchun internetdagi panelga kiring. [Admin qo'llanmasi](ADMIN.md).
 

@@ -48,7 +48,19 @@ document.querySelectorAll('[data-page]').forEach(n=>n.onclick=()=>page(n.dataset
 $('editor-back').onclick=()=>page('library');$('reset-editor').onclick=()=>openEditor(editing);
 function selectedGenres(){return [...document.querySelectorAll('#genre-options input:checked')].map(n=>n.value);}
 function renderGenres(selected=[]){$('genre-options').replaceChildren(...Object.entries(labels).map(([key,label])=>{const wrap=el('label','genre-choice'),input=el('input');input.type='checkbox';input.value=key;input.checked=selected.includes(key);wrap.append(input,el('span','',label));return wrap;}));}
-function setPreview(kind,url){const img=$(kind+'-preview');img.hidden=false;setImage(img,url,kind);}
+function setPreview(kind,url){
+ const img=$(kind+'-preview'),help=$(kind+'-quality');img.hidden=false;
+ const normal=kind==='banner'?'Gorizontal rasm: 2560 × 1440 tavsiya etiladi.':'Vertikal rasm: 2:3 nisbat tavsiya etiladi.';
+ help.textContent=normal;help.classList.remove('low-quality');
+ img.onload=()=>{
+  const file=$(kind+'-file').files[0];if(!file||!url?.startsWith('blob:'))return;
+  const width=img.naturalWidth,height=img.naturalHeight;
+  const low=kind==='banner'&&(width<1600||height<800),portrait=kind==='banner'&&width/height<1.4;
+  help.classList.toggle('low-quality',low||portrait);
+  help.textContent=width+' × '+height+' ? '+bytes(file.size)+'. '+(portrait?'Banner uchun gorizontal rasm tanlang.':low?'Katta ekranda tiniq ko‘rinishi uchun kamida 1920 × 1080 rasm tanlang.':file.size<=2*1024*1024?'Asl fayl sifati saqlanadi.':'Katta rasm yuqori sifatli formatda tayyorlanadi.');
+ };
+ setImage(img,url,kind);
+}
 function openEditor(movieId=null){
  if(busy){toast('Joriy yuklash tugashini kuting.');return;}
  pendingBatch=null;editing=movieId?String(movieId):null;const movie=movies.find(m=>m.id===editing);
