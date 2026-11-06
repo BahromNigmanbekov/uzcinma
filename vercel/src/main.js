@@ -1,3 +1,6 @@
+import {initialData,takeInitialCatalog,catalogPage,updateHomeSEO,finishServerRender,ordinaryClick} from './seo-client.js';
+import {paginationHTML} from '../shared/seo.js';
+import './seo.css';
 import {installSelectMenus} from './select-menu.js';
 import {installTV} from './tv.js';
 import {TitlePage,wordmark} from './title-page.js';
@@ -42,10 +45,10 @@ function toggleSave(movie){
 }
 function card(movie){
  const n=el('article','movie-card'),poster=el('div','poster-wrap');
- const open=button('poster-button',null,null,()=>details(movie));open.setAttribute('aria-label',movie.title+' haqida');
+ const open=el('a','poster-button');open.dataset.movieId=movie.id;open.href='/title/'+encodeURIComponent(movie.collection_id||movie.id);open.onclick=e=>{if(ordinaryClick(e)){e.preventDefault();details(movie);}};open.setAttribute('aria-label',movie.title+' haqida');
  const img=el('img');setImage(img,movie.poster);img.alt=movie.title;img.draggable=false;img.width=342;img.height=513;img.loading='lazy';img.decoding='async';
  const overlay=el('span','poster-overlay');overlay.innerHTML=icon('play');open.append(img,overlay);poster.append(open);
- const title=el('h3','movie-title',movie.title);title.title=movie.title;
+ const title=el('h3','movie-title',movie.title);title.title=movie.title;const titleLink=el('a','',movie.title);titleLink.href=open.href;titleLink.onclick=e=>{if(ordinaryClick(e)){e.preventDefault();details(movie);}};title.replaceChildren(titleLink);
  const meta=el('div','card-meta');meta.append(el('span','year',movie.year||''));
  const save=button('save-button',null,'heart',()=>toggleSave(movie));save.dataset.save=movie.id;meta.append(save);
  const seen=el('span','seen-icon');seen.innerHTML=icon('eye');seen.setAttribute('aria-hidden','true');meta.append(seen);
@@ -163,18 +166,18 @@ function renderMovies(rows,{append=false,total,has_more}){
  rows.forEach(m=>{pool.set(m.id,m);$('movie-grid').append(card(m));});
  $('empty').hidden=$('movie-grid').children.length>0;state.more=has_more;$('more').hidden=!has_more;
  $('catalog-status').textContent=state.saved?'Bu qurilmada saqlangan filmlar.':state.mode==='demo'?'':total===0?'':total+' ta film';
- $('more').disabled=false;updateSaved();
+ $('more').disabled=false;updateSaved();let pager=$('catalog-pages');if(!pager){pager=el('div');pager.id='catalog-pages';$('more').after(pager);}const paginated=!state.q&&!state.genre&&!state.type&&!state.rating&&!state.saved&&state.sort==='latest';pager.hidden=!paginated||total<=12;pager.innerHTML=paginated?paginationHTML(catalogPage(),total):'';if(!titlePage.active)updateHomeSEO([...$('movie-grid').querySelectorAll('.poster-button')].map(n=>pool.get(n.dataset.movieId)).filter(Boolean));
 }
 async function loadCatalog(append=false){
  const version=++fetchVersion;request?.abort();
- if(!append)state.offset=0;
+ if(!append)state.offset=!state.q&&!state.genre&&!state.type&&!state.rating&&!state.saved&&state.sort==='latest'?(catalogPage()-1)*12:0;
  $('catalog-status').textContent='';$('more').disabled=true;
  if(state.mode==='demo'&&boot.length){const rows=demoFiltered(),slice=rows.slice(state.offset,state.offset+12);renderMovies(slice,{append,total:rows.length,has_more:state.offset+12<rows.length});state.offset+=slice.length;return;}
  request=new AbortController();
  const params=new URLSearchParams({q:state.q,genre:state.genre,type:state.type,rating:String(state.rating),sort:state.sort,offset:String(state.offset),limit:'12'});
  if(state.saved)params.set('ids',[...saved].filter(id=>/^[1-9]\d{0,14}$/.test(id)).slice(0,60).join(','));
  try{
-  const response=await fetch(apiURL('/api/catalog?'+params),{signal:request.signal});const data=normalizeCatalog(await response.json());if(!response.ok)throw Error(data.error||'Katalog ochilmadi.');
+  let data=takeInitialCatalog(params);if(!data){const response=await fetch(apiURL('/api/catalog?'+params),{signal:request.signal});data=await response.json();if(!response.ok)throw Error(data.error||'Katalog ochilmadi.');}data=normalizeCatalog(data);
   if(version!==fetchVersion)return;
   let rows=data.movies;
   if(state.saved)rows=rows.filter(m=>saved.has(m.id));
@@ -185,7 +188,7 @@ async function loadCatalog(append=false){
 $('more').onclick=()=>loadCatalog(true);
 async function init(){
  try{
-  const response=await fetch(apiURL('/api/catalog?limit=60'));const data=normalizeCatalog(await response.json());if(!response.ok)throw Error(data.error||'Katalog ochilmadi.');
+  let data=initialData?.catalog;if(!data){const response=await fetch(apiURL('/api/catalog?limit=60'));data=await response.json();if(!response.ok)throw Error(data.error||'Katalog ochilmadi.');}data=normalizeCatalog(data);
   state.mode=data.mode;state.provider=data.provider;state.home=data.home;configureSound(state.home?.selection_sound_enabled);boot=data.movies;boot.forEach(m=>pool.set(m.id,m));for(const m of [...(state.home?.hero||[]),...(state.home?.recommendations||[])])pool.set(m.id,m);
   if(state.mode==='demo'){
    $('mode-label').textContent='Dizayn namunalari \u00b7 HLS sinov pleyeri';
@@ -194,7 +197,7 @@ async function init(){
   }else{
    $('mode-label').textContent='Kino olami';$('demo-player').hidden=true;$('info-demo').hidden=true;
    $('info-mode').textContent='Filmlar mavjud sifatlari bilan tomosha qilinadi. Qidiruv va janr filtrlari orqali kerakli filmni toping.';
-   if(boot[0]){player.movie=boot[0];setVideoPoster($('video'),boot[0].backdrop);heading(boot[0]);}
+   if(boot[0]&&!titlePage.active){player.movie=boot[0];setVideoPoster($('video'),boot[0].backdrop);heading(boot[0]);}
   }
   renderHero();renderTrends();renderGenres();
   const recommendations=Array.isArray(state.home?.recommendations)?state.home.recommendations:state.mode==='demo'?boot.slice(17,23):boot.slice(12,18);
@@ -230,4 +233,4 @@ function soundLabel(){soundNav.textContent='Tanlash ovozi: '+(soundEnabled()?'yo
 soundNav.onclick=soundButton.onclick=()=>{toggleSound();soundLabel();};soundLabel();$('info-dialog').append(soundButton);
 installSelectMenus();installTV({player,titlePage});
 $('watch-section').hidden=true;
-init().then(()=>titlePage.route());
+const initializing=init();if(initialData?.title)titlePage.route().finally(finishServerRender);else initializing.then(()=>titlePage.route()).finally(finishServerRender);

@@ -1,3 +1,4 @@
+import {getSEOSettings,saveSEOSettings} from './seo-settings.js';
 import {telegramImage} from './image-media.js';
 import {validateMovie} from './movie-validation.js';
 export {validateMovie} from './movie-validation.js';
@@ -124,6 +125,7 @@ export async function createAdminService(options={}){
    }
    const session=requireSession(req,!['GET','HEAD'].includes(req.method));
    if(path==='/logout'&&req.method==='POST'){sessions.delete(session.key);res.setHeader('Set-Cookie','uzcinma_admin=; HttpOnly; SameSite=Strict; Path=/api/manage; Max-Age=0');return send(res,200,{ok:true});}
+   if(path==='/seo'){if(req.method==='GET')return send(res,200,{settings:await getSEOSettings(db)});if(req.method==='PATCH')return send(res,200,{settings:await saveSEOSettings(db,await jsonBody(req))});}
    if(path==='/movies'&&req.method==='GET')return send(res,200,{movies:await list(),home:await settings(),genres:GENRES});
    const movieRoute=/^\/movies\/([1-9]\d{0,14})$/.exec(path);
    if(movieRoute&&req.method==='PATCH'){const movie=await find(movieRoute[1]),body=await jsonBody(req);if('deleted'in body)await db.execute({sql:'UPDATE movies SET deleted=?,updated_at=? WHERE id=?',args:[body.deleted?1:0,Date.now(),movie.id]});else await saveMetadata(movie.id,validateMovie(body));await refresh();return send(res,200,{ok:true});}

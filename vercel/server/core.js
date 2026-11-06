@@ -21,7 +21,7 @@ export function parseId(value){const text=String(value??'');if(!/^[1-9]\d{0,14}$
 export function publicURL(value){
  try{const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password||['localhost','api.telegram.org'].includes(url.hostname)||/^(127\.|10\.|192\.168\.|169\.254\.)/.test(url.hostname))return null;return url.href;}catch{return null;}
 }
-export function send(res,status,data,cache=false){res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control',cache?'public, s-maxage='+(typeof cache==='number'?cache:60)+', stale-while-revalidate='+(typeof cache==='number'?cache:300):'no-store');res.setHeader('X-Content-Type-Options','nosniff');res.end(JSON.stringify(data));}
+export function send(res,status,data,cache=false){res.setHeader('X-Robots-Tag','noindex');res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control',cache?'public, s-maxage='+(typeof cache==='number'?cache:60)+', stale-while-revalidate='+(typeof cache==='number'?cache:300):'no-store');res.setHeader('X-Content-Type-Options','nosniff');res.end(JSON.stringify(data));}
 export function fail(res,error){send(res,error.status||500,{error:error.status===400?error.message:error.status===503?'Katalog bazasi sozlanmagan.':'Sorovni bajarib bolmadi.'});}
 export function query(req){return req.query||Object.fromEntries(new URL(req.url,'http://localhost').searchParams);}
 export function movieDTO(row){

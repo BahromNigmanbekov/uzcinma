@@ -1,3 +1,4 @@
+import {installAdminSEO} from './admin-seo.js';
 import {installSelectMenus} from './select-menu.js';
 import {installAdminCredits} from './admin-credits.js';
 import {installAdminSeries} from './admin-series.js';
@@ -41,10 +42,12 @@ $('auth-form').onsubmit=async event=>{
 };
 async function logout(){if(busy){toast('Yuklash tugashini kuting yoki uni toxtating.');return;}try{await api('/logout',{method:'POST'});}catch{}csrf='';showAuth(false);}
 $('logout').onclick=logout;$('logout-mobile').onclick=logout;
+const seoAdmin=installAdminSEO({api,toast});
 function page(name){
+ if(name==='seo')seoAdmin.load();
  document.querySelectorAll('section[id^="page-"]').forEach(n=>n.hidden=n.id!=='page-'+name);
  document.querySelectorAll('[data-page]').forEach(n=>n.classList.toggle('active',n.dataset.page===name));
- $('page-name').textContent={library:'Filmlar',editor:'Filmni tahrirlash',home:'Bosh sahifa',uploads:'Yuklanishlar'}[name];
+ $('page-name').textContent={library:'Filmlar',editor:'Filmni tahrirlash',home:'Bosh sahifa',uploads:'Yuklanishlar',seo:'SEO va Google'}[name];
  window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('[data-page]').forEach(n=>n.onclick=()=>page(n.dataset.page));

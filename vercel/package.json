@@ -22,7 +22,8 @@
     "test:admin": "node tests/admin.browser.mjs",
     "test:series": "npm run build && node tests/series.browser.mjs",
     "test:credits": "npm run build && node tests/credits.browser.mjs",
-    "test:display": "npm run build && node tests/display.browser.mjs"
+    "test:display": "npm run build && node tests/display.browser.mjs",
+    "test:seo": "npm run build && node tests/seo.browser.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

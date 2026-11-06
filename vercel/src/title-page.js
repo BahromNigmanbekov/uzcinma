@@ -1,3 +1,4 @@
+import {takeInitialTitle,updateTitleSEO,updateHomeSEO} from './seo-client.js';
 import {createCreditsView} from './credits.js';
 import './title-page.css';
 import {apiURL,normalizeMovie} from './api-client.js';
@@ -37,13 +38,14 @@ export class TitlePage{
  }
  find(selector){return this.root.querySelector(selector);}
  async request(id,params={},signal){
+  const initial=takeInitialTitle(id,params);if(initial)return initial;
   const response=await fetch(apiURL('/api/title?'+new URLSearchParams({id,...params})),{signal});
   const data=await response.json();if(!response.ok)throw Error(data.error||'Film ochilmadi.');
   for(const key of ['movie','entry_episode','current_episode'])if(data[key])data[key]=normalizeMovie(data[key]);
   data.episodes=(data.episodes||[]).map(normalizeMovie);data.navigation??={};for(const key of ['previous','next'])if(data.navigation[key])data.navigation[key]=normalizeMovie(data.navigation[key]);
   return data;
  }
- async route(){const match=/^\/title\/([^/]+)\/?$/.exec(location.pathname);if(match){const q=new URLSearchParams(location.search);await this.open({id:decodeURIComponent(match[1])},{navigate:false,season:q.get('season')||undefined,episode:q.get('episode')||undefined});}else if(this.active)this.close();}
+ async route(){const match=/^\/title\/([^/]+)\/?$/.exec(location.pathname);if(match){const q=new URLSearchParams(location.search);await this.open({id:decodeURIComponent(match[1])},{navigate:false,autoplay:q.get('play')==='1',season:q.get('season')||undefined,episode:q.get('episode')||undefined});}else if(this.active)this.close();}
  async open(movie,{autoplay=false,navigate=true,season,episode}={}){
   if(navigate)selectionSound();const version=++this.version;this.controller?.abort();this.controller=new AbortController();
   this.lastFocus=document.activeElement;this.active=true;this.data=null;this.current=null;this.player.reset();this.overlay.hidden=true;
@@ -53,18 +55,18 @@ export class TitlePage{
   window.scrollTo({top:0,behavior:'instant'});
   try{
    const data=await this.request(movie.id,{...(season?{season}:{}),...(episode?{episode}:{})},this.controller.signal);if(version!==this.version)return;
-   this.data=data;this.render();document.title=data.movie.title+' | Uzcinma';this.find('.title-status').textContent='';this.find('.title-name').focus({preventScroll:true});document.dispatchEvent(new Event('cinema:scene'));
+   this.data=data;this.render();this.find('.title-status').textContent='';this.find('.title-name').focus({preventScroll:true});document.dispatchEvent(new Event('cinema:scene'));
    if(autoplay||episode||data.current_episode){const target=data.current_episode||data.entry_episode||(data.direct_available?data.movie:null);if(target)this.play(target,{sound:false,scroll:false});}
   }catch(error){if(error.name==='AbortError')return;this.find('.title-status').textContent=error.message;this.toast(error.message);}
  }
  close({navigate=false}={}){
   if(!this.active)return;this.active=false;this.version++;this.controller?.abort();this.info.close();this.player.exitFullscreen();this.player.reset();this.overlay.hidden=true;
   this.originalParent.insertBefore(this.watch,this.originalNext);this.watch.hidden=true;this.root.hidden=true;document.body.classList.remove('title-open');
-  document.title='Uzcinma — Kino olami';if(navigate)history.pushState({},'','/');window.scrollTo({top:0,behavior:'instant'});
+  updateHomeSEO();if(navigate)history.pushState({},'','/');window.scrollTo({top:0,behavior:'instant'});
   if(this.lastFocus?.isConnected)this.lastFocus.focus({preventScroll:true});
  }
  render(){
-  this.creditView.render(this.data.credits);
+  this.creditView.render(this.data.credits);updateTitleSEO(this.data);
   const {movie,seasons}=this.data;this.find('.title-overview').hidden=false;
   setHeroBackground(this.find('.title-art'),movie.backdrop);setImage(this.find('.title-poster'),movie.poster);this.find('.title-poster').alt=movie.title;
   wordmark(this.find('.title-logo'),movie.logo,movie.title);this.find('.title-name').textContent=movie.title;this.find('.title-type').textContent=types[movie.type]||'Kino';

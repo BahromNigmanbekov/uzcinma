@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Allow: /api/catalog
+Allow: /api/title
+Allow: /api/poster
+Sitemap: https://uzcinma.uz/sitemap.xml

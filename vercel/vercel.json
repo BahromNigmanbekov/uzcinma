@@ -5,7 +5,7 @@
   "functions": {
     "api/*.js": {
       "maxDuration": 60,
-      "includeFiles": "server/**"
+      "includeFiles": "{server/**,shared/**,dist/index.html}"
     }
   },
   "headers": [
@@ -34,6 +34,19 @@
           "value": "camera=(), microphone=(), geolocation=()"
         }
       ]
+    },
+    {
+      "source": "/admin/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
     }
   ],
   "rewrites": [
@@ -42,8 +55,86 @@
       "destination": "/api/manage?route=:path*"
     },
     {
+      "source": "/",
+      "destination": "/api/seo?view=home"
+    },
+    {
       "source": "/title/:id",
-      "destination": "/index.html"
+      "destination": "/api/seo?view=title&id=:id"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/seo?view=sitemap"
+    },
+    {
+      "source": "/sitemaps/pages.xml",
+      "destination": "/api/seo?view=pages"
+    },
+    {
+      "source": "/sitemaps/titles-:page.xml",
+      "destination": "/api/seo?view=titles&page=:page"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "uzcinma.vercel.app"
+        }
+      ],
+      "destination": "https://uzcinma.uz/",
+      "permanent": true
+    },
+    {
+      "source": "/title/:id",
+      "has": [
+        {
+          "type": "host",
+          "value": "uzcinma.vercel.app"
+        }
+      ],
+      "destination": "https://uzcinma.uz/title/:id",
+      "permanent": true
+    },
+    {
+      "source": "/robots.txt",
+      "has": [
+        {
+          "type": "host",
+          "value": "uzcinma.vercel.app"
+        }
+      ],
+      "destination": "https://uzcinma.uz/robots.txt",
+      "permanent": true
+    },
+    {
+      "source": "/sitemap.xml",
+      "has": [
+        {
+          "type": "host",
+          "value": "uzcinma.vercel.app"
+        }
+      ],
+      "destination": "https://uzcinma.uz/sitemap.xml",
+      "permanent": true
+    },
+    {
+      "source": "/sitemaps/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "uzcinma.vercel.app"
+        }
+      ],
+      "destination": "https://uzcinma.uz/sitemaps/:path*",
+      "permanent": true
     }
   ]
 }

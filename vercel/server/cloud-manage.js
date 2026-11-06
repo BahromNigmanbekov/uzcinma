@@ -1,3 +1,4 @@
+import {getSEOSettings,saveSEOSettings} from './seo-settings.js';
 import {createWikidataService} from './wikidata-credits.js';
 import {ensureCreditsSchema,getCredits,saveManualCredits,removeTMDBCredits,createTMDBService} from './credits.js';
 import {ensureSeriesSchema,availabilitySQL,createCollection,saveSeason,removeSeason,attachEpisode,detachEpisode,restoreTitle,titleDetails,titleRow} from './series.js';
@@ -151,6 +152,7 @@ export function createCloudManage({db,config=process.env,transport=uploadToTeleg
     res.setHeader('Set-Cookie','uzcinma_admin=; HttpOnly; SameSite=Strict; Path=/api/manage; Max-Age=0'+(String(config.APP_ORIGIN||'').startsWith('https://')?'; Secure':''));
     return send(res,200,{ok:true});
    }
+   if(path==='/seo'){if(method==='GET')return send(res,200,{settings:await getSEOSettings(db)});if(method==='PATCH')return send(res,200,{settings:await saveSEOSettings(db,await jsonBody(req))});}
    if(path==='/movies'&&method==='GET'){
     const result=await db.execute('SELECT m.*,'+availabilitySQL()+' AS available FROM movies m WHERE m.collection_id IS NULL ORDER BY m.id DESC');
     const movies=result.rows.map(row=>({...movieDTO(row),size:Number(row.file_size)||0,deleted:Boolean(row.deleted),has_banner:Boolean(row.banner_file_id||row.backdrop_url),has_poster:Boolean(row.poster_file_id||row.poster_url)}));
