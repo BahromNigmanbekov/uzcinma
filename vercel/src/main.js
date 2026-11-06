@@ -1,9 +1,12 @@
+import {installSelectMenus} from './select-menu.js';
+import {installTV} from './tv.js';
 import {TitlePage,wordmark} from './title-page.js';
 import {installSearch} from './search.js';
 import {configureSound,toggleSound,soundEnabled} from './selection-sound.js';
 import './style.css';
 import './branding.css';
 import './catalog.css';
+import './display.css';
 import {setImage,setHeroBackground,setVideoPoster,DEFAULT_BANNER} from './artwork.js';
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -225,5 +228,6 @@ const soundButton=el('button','secondary sound-setting');soundButton.type='butto
 const soundNav=el('button','nav-link');soundNav.type='button';soundNav.id='sound-nav';$('mobile-nav').append(soundNav);
 function soundLabel(){soundNav.textContent='Tanlash ovozi: '+(soundEnabled()?'yoqilgan':'o\u2018chirilgan');soundNav.setAttribute('aria-pressed',String(soundEnabled()));soundButton.textContent='Tanlash ovozi: '+(soundEnabled()?'yoqilgan':'o\u2018chirilgan');soundButton.setAttribute('aria-pressed',String(soundEnabled()));}
 soundNav.onclick=soundButton.onclick=()=>{toggleSound();soundLabel();};soundLabel();$('info-dialog').append(soundButton);
+installSelectMenus();installTV({player,titlePage});
 $('watch-section').hidden=true;
 init().then(()=>titlePage.route());

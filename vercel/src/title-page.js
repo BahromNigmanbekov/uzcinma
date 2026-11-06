@@ -6,14 +6,19 @@ import {selectionSound} from './selection-sound.js';
 import {formatTime} from './player-utils.js';
 const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const types={movie:'Kino',series:'Serial',anime:'Anime',animation:'Multfilm'};
-export function wordmark(image,url,title){image.alt=title;image.hidden=!url;image.onload=()=>image.hidden=false;image.onerror=()=>image.hidden=true;if(url)image.src=url;else image.removeAttribute('src');}
+export function wordmark(image,url,title){const show=value=>{image.hidden=!value;image.parentElement?.classList.toggle('has-wordmark',value);};image.alt=title;show(Boolean(url));image.onload=()=>show(true);image.onerror=()=>show(false);if(url)image.src=url;else image.removeAttribute('src');}
 export class TitlePage{
  constructor({player,toast,toggleSave,isSaved,genres}){
   Object.assign(this,{player,toast,toggleSave,isSaved,genres});this.version=0;
   this.watch=document.getElementById('watch-section');this.originalParent=this.watch.parentNode;this.originalNext=this.watch.nextSibling;
   this.root=el('section','title-page');this.root.id='title-page';this.root.hidden=true;
   this.root.innerHTML='<div class="title-art" aria-hidden="true"></div><div class="title-shell"><button class="title-back secondary" type="button">\u2190 Katalogga qaytish</button><p class="title-status" role="status"></p><div class="title-overview" hidden><img class="title-poster" width="300" height="450" alt=""><div class="title-copy"><p class="title-type"></p><img class="title-logo" alt="" hidden><h1 class="title-name" tabindex="-1"></h1><p class="title-meta"></p><p class="title-description"></p><div class="title-buttons"><button class="primary title-play" type="button">\u25b6 Tomosha qilish</button><button class="secondary title-save" type="button">Ro\u2018yxatga</button></div></div></div><div class="title-player-mount"></div><div class="episode-navigation" hidden><button class="secondary previous-episode" type="button">\u2190 Oldingi qism</button><span class="current-episode"></span><button class="primary next-episode" type="button">Keyingi qism \u2192</button></div><section class="seasons-panel" hidden aria-labelledby="seasons-heading"><div class="seasons-heading"><h2 id="seasons-heading">Fasl va qismlar</h2><label>Faslni tanlang<select class="season-select"></select></label></div><p class="season-description"></p><p class="episode-count"></p><div class="episode-list"></div><button class="secondary episodes-more" type="button" hidden>Yana qismlar</button><p class="episodes-empty" hidden>Bu faslga hali qism qo\u2018shilmagan.</p></section></div>';
-  this.creditView=createCreditsView();this.find('.title-overview').after(this.creditView.root);
+  const intro=el('div','title-intro');this.find('.title-back').before(intro);intro.append(this.find('.title-back'),this.find('.title-status'),this.find('.title-overview'));
+  const summary=el('div','title-summary'),description=this.find('.title-description');description.before(summary);summary.append(description);
+  this.readMore=el('button','title-read-more','To\u2018liq ma\u2019lumot');this.readMore.type='button';summary.append(this.readMore);
+  this.info=el('dialog','title-info-dialog');this.info.innerHTML='<button type="button" class="dialog-close" aria-label="Yopish">\u00d7</button><h2></h2><p class="full-meta"></p><p class="full-description"></p>';document.body.append(this.info);
+  this.readMore.onclick=()=>{if(!this.data)return;this.info.querySelector('h2').textContent=this.data.movie.title;this.info.querySelector('.full-meta').textContent=this.find('.title-meta').textContent;this.info.querySelector('.full-description').textContent=this.data.movie.description;this.info.showModal();};this.info.querySelector('button').onclick=()=>this.info.close();this.info.onclick=e=>{if(e.target===this.info){const r=this.info.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)this.info.close();}};
+  this.creditView=createCreditsView();intro.after(this.creditView.root);
   document.querySelector('main').prepend(this.root);
   this.overlay=el('div','next-episode-overlay');this.overlay.hidden=true;
   this.overlay.innerHTML='<button type="button" class="next-preview"><img alt="" width="200" height="112"><span><small>KEYINGI QISM</small><strong></strong><span class="next-caption"></span></span><b aria-hidden="true">\u25b6</b></button>';
@@ -48,12 +53,12 @@ export class TitlePage{
   window.scrollTo({top:0,behavior:'instant'});
   try{
    const data=await this.request(movie.id,{...(season?{season}:{}),...(episode?{episode}:{})},this.controller.signal);if(version!==this.version)return;
-   this.data=data;this.render();document.title=data.movie.title+' | Uzcinma';this.find('.title-status').textContent='';this.find('.title-name').focus({preventScroll:true});
+   this.data=data;this.render();document.title=data.movie.title+' | Uzcinma';this.find('.title-status').textContent='';this.find('.title-name').focus({preventScroll:true});document.dispatchEvent(new Event('cinema:scene'));
    if(autoplay||episode||data.current_episode){const target=data.current_episode||data.entry_episode||(data.direct_available?data.movie:null);if(target)this.play(target,{sound:false,scroll:false});}
   }catch(error){if(error.name==='AbortError')return;this.find('.title-status').textContent=error.message;this.toast(error.message);}
  }
  close({navigate=false}={}){
-  if(!this.active)return;this.active=false;this.version++;this.controller?.abort();this.player.reset();this.overlay.hidden=true;
+  if(!this.active)return;this.active=false;this.version++;this.controller?.abort();this.info.close();this.player.exitFullscreen();this.player.reset();this.overlay.hidden=true;
   this.originalParent.insertBefore(this.watch,this.originalNext);this.watch.hidden=true;this.root.hidden=true;document.body.classList.remove('title-open');
   document.title='Uzcinma — Kino olami';if(navigate)history.pushState({},'','/');window.scrollTo({top:0,behavior:'instant'});
   if(this.lastFocus?.isConnected)this.lastFocus.focus({preventScroll:true});
@@ -64,7 +69,7 @@ export class TitlePage{
   setHeroBackground(this.find('.title-art'),movie.backdrop);setImage(this.find('.title-poster'),movie.poster);this.find('.title-poster').alt=movie.title;
   wordmark(this.find('.title-logo'),movie.logo,movie.title);this.find('.title-name').textContent=movie.title;this.find('.title-type').textContent=types[movie.type]||'Kino';
   this.find('.title-meta').textContent=[movie.year,movie.rating?'\u2605 '+movie.rating:null,...(movie.genres||[]).map(g=>this.genres[g]||g)].filter(Boolean).join(' · ');
-  this.find('.title-description').textContent=movie.description||'Tavsif hali kiritilmagan.';
+  this.find('.title-description').textContent=movie.description||'Tavsif hali kiritilmagan.';this.readMore.hidden=!movie.description;
   const target=this.data.current_episode||this.data.entry_episode||(this.data.direct_available?movie:null);
   this.find('.title-play').disabled=!target?.available;this.find('.title-play').textContent=target?.available?(target.collection_id?'\u25b6 '+target.season_number+'-fasl, '+target.episode_number+'-qism':'\u25b6 Tomosha qilish'):(movie.is_collection?'Qismlar tez orada':'Video kutilmoqda');
   this.refreshSaved();this.find('.seasons-panel').hidden=!movie.is_collection&&!seasons.length;

@@ -1,3 +1,5 @@
+import {VideoZoom} from './video-zoom.js';
+import {closeSelectMenus,hasOpenSelect} from './select-menu.js';
 import {apiURL,API_BASE} from './api-client.js';
 import {setVideoPoster} from './artwork.js';
 import {putIcon} from './icons.js';
@@ -8,6 +10,7 @@ export class MoviePlayer {
  constructor({onMovie=()=>{},onError=()=>{}}={}) {
   this.root=$('player');this.video=$('video');this.onMovie=onMovie;this.onError=onError;
   this.controlPointers=new Set();
+  this.zoom=new VideoZoom({root:this.root,video:this.video,onGesture:()=>{clearTimeout(this.tapTimer);this.tapStart=null;this.lastTap=null;},onChange:()=>this.showControls()});
   this.generation=0;this.loaded=false;this.quality='auto';this.resumeTime=0;
   this.movie={id:'demo-jurassic',title:'Jurassic World: Fallen Kingdom',year:2018,available:false,poster:'/assets/jurassic.webp'};
   for(const [id,name]of Object.entries({'play':'play','big-play':'play','rewind':'rewind','forward':'forward','mute':'volume','captions':'captions','settings-toggle':'settings','pip':'pip','fullscreen':'full','watch-full':'full','watch-save':'heart'}))putIcon(id,name);
@@ -61,27 +64,29 @@ export class MoviePlayer {
   this.root.addEventListener('focusin',()=>this.showControls());
   this.root.addEventListener('keydown',e=>{
    this.showControls();
-   if(e.target.matches('input,select')||(e.target.closest('button')&&[' ','Enter'].includes(e.key)))return;
+   if(e.target.matches('input,select')||e.target.closest('[role=combobox],.ui-select-menu')||(e.target.closest('button')&&[' ','Enter'].includes(e.key)))return;
    const action={' ':'toggle',k:'toggle',ArrowRight:'forward',ArrowLeft:'rewind',m:'mute',f:'fullscreen'}[e.key];
    if(!action)return;e.preventDefault();
    if(action==='toggle')this.toggle();else if(action==='forward')this.seek(10);else if(action==='rewind')this.seek(-10);else if(action==='mute')this.video.muted=!this.video.muted;else this.fullscreen();
   });
   this.root.addEventListener('pointerup',e=>this.gesture(e));
   this.root.addEventListener('pointercancel',()=>{this.tapStart=null;});
-  document.addEventListener('pointerdown',e=>{if(!$('settings-panel').hidden&&!e.target.closest('.settings-wrap'))this.settings(false);});
+  document.addEventListener('pointerdown',e=>{if(!$('settings-panel').hidden&&!e.target.closest('.settings-wrap,.ui-select-menu'))this.settings(false);});
+  document.addEventListener('selectmenu:toggle',e=>{if(this.root.contains(e.detail.select))this.showControls();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&this.root.classList.contains('is-fullscreen')){e.preventDefault();this.exitFullscreen();}});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)this.savePosition(true);});
   window.addEventListener('pagehide',()=>this.savePosition(true));
  }
  loading(active){this.root.classList.toggle('loading',active);this.root.setAttribute('aria-busy',String(active));$('player-loading').hidden=!active;}
  message(text){$('player-message').textContent=text;}
- settings(open){$('settings-panel').hidden=!open;$('settings-toggle').setAttribute('aria-expanded',String(open));this.showControls();}
+ settings(open){if(!open)closeSelectMenus(this.root);$('settings-panel').hidden=!open;$('settings-toggle').setAttribute('aria-expanded',String(open));this.showControls();}
  showControls(){
   this.root.classList.remove('controls-hidden');clearTimeout(this.hideTimer);
   if(!this.video.paused&&!this.video.ended)this.hideTimer=setTimeout(()=>this.hideControls(),CONTROLS_IDLE_MS);
  }
  hideControls(){
   clearTimeout(this.hideTimer);
-  if(this.video.paused||this.video.ended||this.scrubbing||this.controlPointers.size)return;
+  if(this.video.paused||this.video.ended||this.scrubbing||this.controlPointers.size||hasOpenSelect(this.root))return;
   $('settings-panel').hidden=true;$('settings-toggle').setAttribute('aria-expanded','false');
   this.root.classList.add('controls-hidden');
  }
@@ -91,7 +96,7 @@ export class MoviePlayer {
  }
  gesture(e){
   const start=this.tapStart;this.tapStart=null;
-  if(!start||start.id!==e.pointerId||Math.hypot(e.clientX-start.x,e.clientY-start.y)>12||performance.now()-start.time>700||e.target.closest('button,input,select,.player-controls')||!e.isPrimary)return;
+  if(this.zoom.suppressTap||!start||start.id!==e.pointerId||Math.hypot(e.clientX-start.x,e.clientY-start.y)>12||performance.now()-start.time>700||e.target.closest('button,input,select,.player-controls')||!e.isPrimary)return;
   const rect=this.root.getBoundingClientRect(),tap={time:performance.now(),x:e.clientX-rect.left,y:e.clientY-rect.top};
   const jump=doubleTap(this.lastTap,tap,rect.width);
   if(jump){clearTimeout(this.tapTimer);this.lastTap=null;this.seek(jump);return;}
@@ -125,11 +130,18 @@ export class MoviePlayer {
  }
  updateCaptions(){const tracks=[...this.video.textTracks].filter(t=>['captions','subtitles'].includes(t.kind));$('captions').disabled=!tracks.length;this.tracks=tracks;}
  toggleCaptions(){for(const track of this.tracks||[])track.mode=track.mode==='showing'?'disabled':'showing';$('captions').classList.toggle('selected',this.tracks?.some(t=>t.mode==='showing'));}
+ async exitFullscreen(){
+  closeSelectMenus(this.root);this.root.classList.remove('is-fullscreen');document.body.classList.remove('site-fullscreen');
+  if(document.fullscreenElement)try{await document.exitFullscreen();}catch{}this.showControls();
+ }
  async fullscreen(){
-  this.showControls();
-  try{if(document.fullscreenElement)await document.exitFullscreen();else if(this.root.requestFullscreen)await this.root.requestFullscreen();else if(this.video.webkitEnterFullscreen)this.video.webkitEnterFullscreen();else this.message("Bu qurilmada to'liq ekran qo'llanmaydi.");}catch{this.message("To'liq ekran ochilmadi.");}
+  this.showControls();closeSelectMenus(this.root);
+  if(document.fullscreenElement||this.root.classList.contains('is-fullscreen'))return this.exitFullscreen();
+  try{if(this.root.requestFullscreen){await this.root.requestFullscreen();return;}}catch{}
+  this.root.classList.add('is-fullscreen');document.body.classList.add('site-fullscreen');this.root.focus({preventScroll:true});
  }
  reset(){
+  this.zoom.reset();
   clearTimeout(this.tapTimer);this.lastTap=null;this.tapStart=null;this.loading(false);
   this.controlPointers.clear();this.scrubbing=false;clearTimeout(this.hideTimer);this.savePosition(true);this.generation++;this.controller?.abort();this.hls?.destroy();this.hls=null;this.video.pause();this.video.removeAttribute('src');this.video.load();
   this.loaded=false;this.root.classList.remove('playing','loading','controls-hidden');this.message('');this.updateTime();this.settings(false);this.choices([{value:'auto',label:'Avtomatik'}]);this.recoveries=0;

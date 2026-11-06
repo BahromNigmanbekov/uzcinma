@@ -1,3 +1,4 @@
+import {installSelectMenus} from './select-menu.js';
 import {installAdminCredits} from './admin-credits.js';
 import {installAdminSeries} from './admin-series.js';
 import {prepareAdminImage} from './admin-images.js';
@@ -249,4 +250,5 @@ const seriesEditor=installAdminSeries({api,toast,getMovies:()=>movies,openEditor
 const creditsEditor=installAdminCredits({api,toast,openEditor});
 $('selection-sound-enabled').onchange=()=>homeDirty=true;
 $('clear-logo').onclick=async()=>{if(!editing||busy)return;try{await api('/movies/'+editing,{method:'PATCH',body:{clear_logo:true}});await loadData();await openEditor(editing);toast('Logo olib tashlandi.');}catch(error){toast(error.message);}};
+installSelectMenus();
 if(API_BASE&&new URL(API_BASE).origin!==location.origin)location.replace(API_BASE+'/admin/');else init();

@@ -1,0 +1,25 @@
+.tv-mode{--page-width:3200px;--page-gutter:5vw;--header-height:112px}
+.tv-mode .header-inner{height:var(--header-height);max-width:none;padding-inline:5vw}
+.tv-mode .header-inner .brand-image{width:230px}.tv-mode .header-inner nav{gap:32px}
+.tv-mode .nav-link{font-size:21px;min-height:58px}.tv-mode .icon-button,.tv-mode .avatar{width:58px;height:58px;flex-basis:58px}
+.tv-mode .icon-button svg{width:30px;height:30px}
+.tv-mode button:focus-visible,.tv-mode a:focus-visible,.tv-mode input:focus-visible,.tv-mode [tabindex="0"]:focus-visible{outline:4px solid #fff!important;outline-offset:5px;box-shadow:0 0 0 9px #ff173b90!important;border-radius:8px}
+.tv-mode .primary,.tv-mode .secondary,.tv-mode .pill{font-size:20px;min-height:60px;padding:16px 28px}
+.tv-mode .hero h1{font-size:clamp(50px,4vw,100px)}.tv-mode .hero .hero-description{font-size:clamp(20px,1.4vw,30px);max-width:55%;line-height:1.6}
+.tv-mode .hero-duration,.tv-mode .hero-rating,.tv-mode .hero-genres{font-size:20px}.tv-mode .hero .hero-title-logo{width:min(700px,55%);height:21vh}
+.tv-mode .title-intro{gap:24px;padding-bottom:36px}.tv-mode .title-shell{width:90%;max-width:3000px}
+.tv-mode .title-overview{grid-template-columns:clamp(200px,19vw,480px) minmax(0,1fr);gap:4vw}
+.tv-mode .title-poster{max-height:64vh}.tv-mode .title-logo{width:min(700px,90%);height:20vh}
+.tv-mode .title-description{font-size:clamp(20px,1.4vw,30px);max-width:1400px;line-height:1.6;-webkit-line-clamp:3}
+.tv-mode .title-summary{max-width:1400px}.tv-mode .title-meta{font-size:22px}.tv-mode .title-type{font-size:19px}.tv-mode .title-read-more{font-size:20px;min-height:42px}
+.tv-mode .title-name{font-size:clamp(42px,3.5vw,86px)}
+.tv-mode .section-title,.tv-mode .seasons-heading h2{font-size:34px}.tv-mode .section-tab{font-size:19px;min-height:54px}
+.tv-mode .movie-title,.tv-mode .episode-copy h3{font-size:23px}.tv-mode .card-meta,.tv-mode .card-rating,.tv-mode .episode-copy>span{font-size:18px}
+.tv-mode .card-meta{gap:12px;min-height:42px}.tv-mode .save-button{width:42px;height:42px;min-width:42px}.tv-mode .seen-icon,.tv-mode .seen-icon svg{width:22px;height:22px;flex-basis:22px}
+.tv-mode .seasons-heading label{font-size:19px}.tv-mode .seasons-heading .ui-select{width:480px}.tv-mode .control{min-height:54px;min-width:54px}.tv-mode .control svg{width:32px;height:32px}.tv-mode .time{font-size:19px}
+.tv-mode .player-controls{left:3%;right:3%;bottom:24px;padding:14px 20px}.tv-mode .controls-row{min-height:58px}
+.tv-mode .player{max-height:none}.tv-mode .gesture-note,.tv-mode .current-episode,.tv-mode .episode-copy p{font-size:19px}
+.tv-mode dialog{width:min(1000px,90vw);padding:44px}.tv-mode dialog h2{font-size:36px}.tv-mode dialog p,.tv-mode .title-info-dialog .full-description{font-size:22px}
+.tv-mode .tv-help{color:#bdbdc8;line-height:1.7}.tv-setting{margin:12px 0}
+@media(min-width:2400px){.tv-mode{--header-height:150px}.tv-mode .header-inner .brand-image{width:310px}.tv-mode .nav-link{font-size:28px}.tv-mode .primary,.tv-mode .secondary,.tv-mode .pill{font-size:27px;min-height:78px}.tv-mode .title-meta,.tv-mode .hero-duration,.tv-mode .hero-rating,.tv-mode .hero-genres{font-size:28px}.tv-mode .title-read-more{font-size:26px;min-height:54px}.tv-mode .ui-select-trigger{font-size:28px;min-height:78px}.tv-mode .ui-select-option{font-size:27px;min-height:74px}}
+@media(max-height:800px){.tv-mode{--header-height:86px}.tv-mode .nav-link{font-size:18px}.tv-mode .header-inner .brand-image{width:190px}.tv-mode .title-intro{gap:14px;padding-bottom:24px}.tv-mode .title-copy{gap:10px}.tv-mode .title-logo{height:15vh}.tv-mode .title-description{font-size:18px;-webkit-line-clamp:2}.tv-mode .title-meta{font-size:18px}.tv-mode .title-read-more{font-size:17px;min-height:34px}.tv-mode .primary,.tv-mode .secondary{min-height:50px;font-size:17px;padding:12px 22px}.tv-mode .hero .hero-description{font-size:18px}.tv-mode .hero h1{font-size:44px}}
