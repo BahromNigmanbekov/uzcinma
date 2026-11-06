@@ -7,7 +7,7 @@ const label=entity=>entity?.labels?.uz?.value||entity?.labels?.en?.value||entity
 const description=entity=>entity?.descriptions?.uz?.value||entity?.descriptions?.en?.value||'';
 const year=entity=>{for(const property of ['P577','P580']){const time=value(claims(entity,property)[0])?.time,match=/^\+?(\d{4})-/.exec(time||'');if(match)return match[1];}return '';};
 const filmTypes=new Set(['Q11424','Q5398426','Q202866','Q1259759','Q581714','Q24869','Q15416']);
-const isTitle=entity=>claims(entity,'P161').length||claims(entity,'P57').length||claims(entity,'P31').some(s=>filmTypes.has(value(s)?.id));
+const isTitle=entity=>!claims(entity,'P31').some(s=>value(s)?.id==='Q374821')&&(claims(entity,'P161').length||claims(entity,'P57').length||claims(entity,'P31').some(s=>filmTypes.has(value(s)?.id)));
 const fileKey=name=>String(name||'').normalize('NFC').replace(/_/g,' ');
 const plain=text=>String(text||'').replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();
 const overrides=(before,after)=>({...after,...(before?.overrides||{}),overrides:before?.overrides||{}});
@@ -39,7 +39,7 @@ export function createWikidataService({db,fetchImpl=fetch,now=()=>Date.now()}){
     if(!image||!(/^(CC BY(?:-SA)?(?: |$)|CC0|Public domain)/i.test(license)))continue;
     const author=plain(meta.Artist?.value).slice(0,200);if(/^CC BY/i.test(license)&&!author)continue;
     const photo=image.thumburl||image.url;
-    if(!/^https:\/\/upload\.wikimedia\.org\//.test(photo||'')||!/^https:\/\/commons\.wikimedia\.org\//.test(image.descriptionurl||''))continue;
+    if(!/^https:\/\/(?:upload|thumb)\.wikimedia\.org\//.test(photo||'')||!/^https:\/\/commons\.wikimedia\.org\//.test(image.descriptionurl||''))continue;
     if(licenseURL&&!/^https?:\/\/(?:creativecommons\.org|commons\.wikimedia\.org)\//.test(licenseURL))continue;
     output.set(fileKey(String(page.title).replace(/^File:/,'')),{photo,photo_credit:{author:author||'Wikimedia Commons',license:license.slice(0,80),license_url:licenseURL.replace(/^http:/,'https:'),url:image.descriptionurl,changes:'Surat doira ichida kesib ko\u2018rsatilgan.'}});
    }
