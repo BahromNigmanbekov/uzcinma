@@ -1,3 +1,4 @@
+import {createWikidataService} from '../server/wikidata-credits.js';
 import {authorize,database,parseId,publicURL,QUALITIES,send,fail} from '../server/core.js';
 import {cloudStatus,initializeCatalog} from '../server/cloud-admin.js';
 export default async function handler(req,res){
@@ -6,6 +7,8 @@ export default async function handler(req,res){
   if(req.method==='GET')return send(res,200,{...await cloudStatus(database()),telegram_configured:Boolean(process.env.BOT_TOKEN&&process.env.API_ID&&process.env.API_HASH),webhook_configured:Boolean(process.env.TELEGRAM_WEBHOOK_SECRET)});
   if(req.method!=='POST')return send(res,405,{error:'Method not allowed'});
   const body=typeof req.body==='string'?JSON.parse(req.body):req.body;
+  if(body.operation==='import-credits'&&body.provider==='wikidata')return send(res,200,{credits:await createWikidataService({db:database()}).importTitle(parseId(body.movie_id),{wikidata_id:body.wikidata_id,revision:body.revision})});
+  if(body.operation==='find-credits'&&body.provider==='wikidata')return send(res,200,await createWikidataService({db:database()}).search(body.q));
   if(body.operation==='initialize')return send(res,200,await initializeCatalog(database(),body));
   const id=parseId(body.movie_id),quality=body.quality,url=publicURL(body.url);
   if(!QUALITIES.includes(quality)||!url)return send(res,400,{error:'Invalid source'});
@@ -14,6 +17,6 @@ export default async function handler(req,res){
  }catch(error){
   const code=String(error.code||error.name||'unknown').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,60);
   res.setHeader('X-Uzcinma-Error',code);
-  send(res,error.status||503,{error:error.status&&[400,409].includes(error.status)?error.message:'Cloud database is not ready.',code});
+  send(res,error.status||503,{error:error.status&&[400,404,409,422,429,503].includes(error.status)?error.message:'Cloud database is not ready.',code});
  }
 }

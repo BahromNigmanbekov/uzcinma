@@ -1,3 +1,4 @@
+import {getCredits} from './credits.js';
 import {movieDTO,parseId,telegramMediaReady} from './core.js';
 import {validateMovie} from './movie-validation.js';
 const initialized=new WeakMap();
@@ -108,5 +109,5 @@ export async function titleDetails(db,id,{season,episode,offset=0,limit=100,admi
  };
  const [previous,next]=await Promise.all([neighbor('previous'),neighbor('next')]);
  const dto=movieDTO(root),direct=Boolean((await db.execute({sql:'SELECT '+(telegramMediaReady()?'(m.source_message_id>0 AND m.file_size>0) OR ':'')+'EXISTS(SELECT 1 FROM sources WHERE movie_id=m.id) AS ready FROM movies m WHERE id=?',args:[root.id]})).rows[0]?.ready);
- return {movie:dto,seasons,selected_season:selected,episodes:rows.rows.map(row=>episodeDTO(row,root,admin)),total:seasons.find(s=>s.number===selected)?.episode_count||0,has_more:offset+limit<(seasons.find(s=>s.number===selected)?.episode_count||0),entry_episode:first?episodeDTO(first,root,admin):null,direct_available:direct,current_episode:current?episodeDTO(current,root,admin):null,navigation:{previous,next}};
+ return {movie:dto,credits:await getCredits(db,root.id),seasons,selected_season:selected,episodes:rows.rows.map(row=>episodeDTO(row,root,admin)),total:seasons.find(s=>s.number===selected)?.episode_count||0,has_more:offset+limit<(seasons.find(s=>s.number===selected)?.episode_count||0),entry_episode:first?episodeDTO(first,root,admin):null,direct_available:direct,current_episode:current?episodeDTO(current,root,admin):null,navigation:{previous,next}};
 }

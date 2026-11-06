@@ -20,7 +20,8 @@
     "test:banner": "node tests/banner.browser.mjs",
     "admin:server": "node scripts/admin-server.mjs",
     "test:admin": "node tests/admin.browser.mjs",
-    "test:series": "npm run build && node tests/series.browser.mjs"
+    "test:series": "npm run build && node tests/series.browser.mjs",
+    "test:credits": "npm run build && node tests/credits.browser.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

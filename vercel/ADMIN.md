@@ -82,3 +82,8 @@ haqiqiy botga sinov xabarlari yuborilmaydi.
 ## Seriallar va logolar
 
 Fasl, qism, film logosi va tanlash ovozini boshqarish: [SERIALS.md](SERIALS.md).
+
+
+## Aktyorlar va rejissyorlar
+
+Bepul import va tahrirlash: [CREDITS.md](CREDITS.md).

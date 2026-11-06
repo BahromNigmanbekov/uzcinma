@@ -1,3 +1,5 @@
+import {createWikidataService} from './wikidata-credits.js';
+import {ensureCreditsSchema,getCredits,saveManualCredits,removeTMDBCredits,createTMDBService} from './credits.js';
 import {ensureSeriesSchema,availabilitySQL,createCollection,saveSeason,removeSeason,attachEpisode,detachEpisode,restoreTitle,titleDetails,titleRow} from './series.js';
 import {imageType,telegramImage,MAX_IMAGE_BYTES} from './image-media.js';
 import {randomBytes,randomUUID,createHash,scrypt,timingSafeEqual} from 'node:crypto';
@@ -38,9 +40,11 @@ function pathOf(req){
 function jobDTO(row){
  return {id:row.id,kind:row.kind,filename:row.filename,mime:row.mime,size:Number(row.size),received:Number(row.received),sent:Number(row.sent),stage:row.stage,error:row.error||null,movie_id:String(row.movie_id),title:'',created:Number(row.created),accepted_by_telegram:Boolean(row.telegram_result),can_retry:row.stage==='error'&&(Boolean(row.telegram_result)||Number(row.received)===Number(row.size))};
 }
-export function createCloudManage({db,config=process.env,transport=uploadToTelegram,telegramCheck,now=()=>Date.now()}){
+export function createCloudManage({db,config=process.env,transport=uploadToTelegram,telegramCheck,tmdbFetch=fetch,wikidataFetch=fetch,now=()=>Date.now()}){
+ const wikidata=createWikidataService({db,fetchImpl:wikidataFetch,now});
+ const tmdb=createTMDBService({db,config,fetchImpl:tmdbFetch,now});
  let ready;
- const init=()=>ready??=(async()=>{await db.batch(schema,'write');await ensureSeriesSchema(db);})().catch(error=>{ready=undefined;throw error;});
+ const init=()=>ready??=(async()=>{await db.batch(schema,'write');await ensureSeriesSchema(db);await ensureCreditsSchema(db);})().catch(error=>{ready=undefined;throw error;});
  const auth=()=>passwordConfig(config.ADMIN_PASSWORD_HASH);
  const authVersion=()=>sha(config.ADMIN_PASSWORD_HASH||'');
  function origin(req){
@@ -163,6 +167,26 @@ export function createCloudManage({db,config=process.env,transport=uploadToTeleg
    }
    const detachRoute=/^\/episodes\/([1-9]\d{0,14})\/detach$/.exec(path);
    if(detachRoute&&method==='POST')return send(res,200,await detachEpisode(db,detachRoute[1]));
+   if(path==='/wikidata/search'&&method==='GET'){const params={...Object.fromEntries(new URL(req.url,'http://localhost').searchParams),...req.query};return send(res,200,await wikidata.search(params.q));}
+   if(path==='/tmdb/connection'){
+    if(method==='GET')return send(res,200,await tmdb.status());
+    if(method==='POST')return send(res,200,await tmdb.connect((await jsonBody(req)).credential));
+    if(method==='DELETE')return send(res,200,await tmdb.disconnect());
+   }
+   if(path==='/tmdb/search'&&method==='GET'){
+    const params={...Object.fromEntries(new URL(req.url,'http://localhost').searchParams),...req.query};
+    return send(res,200,await tmdb.search(params.q,params.type||'all',params.page));
+   }
+   const creditsRoute=/^\/movies\/([1-9]\d{0,14})\/credits(?:\/(tmdb|wikidata))?$/.exec(path);
+   if(creditsRoute){
+    const [,id,action]=creditsRoute;await movie(id);
+    if(!action&&method==='GET')return send(res,200,{credits:await getCredits(db,id),tmdb:await tmdb.status()});
+    if(!action&&method==='PATCH')return send(res,200,{credits:await saveManualCredits(db,id,await jsonBody(req))});
+    if(action==='wikidata'&&method==='POST')return send(res,200,{credits:await wikidata.importTitle(id,await jsonBody(req))});
+    if(action==='wikidata'&&method==='DELETE')return send(res,200,{credits:await wikidata.disconnect(id,(await jsonBody(req)).revision)});
+    if(action==='tmdb'&&method==='POST')return send(res,200,{credits:await tmdb.importTitle(id,await jsonBody(req))});
+    if(action==='tmdb'&&method==='DELETE')return send(res,200,{credits:await removeTMDBCredits(db,id,(await jsonBody(req)).revision)});
+   }
    const movieRoute=/^\/movies\/([1-9]\d{0,14})$/.exec(path);
    if(movieRoute&&method==='GET'){
     const row=await titleRow(db,movieRoute[1]);

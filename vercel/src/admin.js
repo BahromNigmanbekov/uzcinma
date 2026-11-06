@@ -1,3 +1,4 @@
+import {installAdminCredits} from './admin-credits.js';
 import {installAdminSeries} from './admin-series.js';
 import {prepareAdminImage} from './admin-images.js';
 import './admin.css';
@@ -72,7 +73,7 @@ async function openEditor(movieId=null){
  $('banner-label').textContent='Banner rasmini tanlang';$('poster-label').textContent='Poster rasmini tanlang';
  setPreview('banner',movie?.has_banner?movie.backdrop:null);setPreview('poster',movie?.poster||null);setPreview('logo',movie?.logo||null);$('logo-label').textContent='Logo rasmini tanlang';$('clear-logo').hidden=!movie.logo;
  $('save-movie').textContent='Ozgarishlarni saqlash';$('editor-status').textContent='Malumotlar tayyor bolgach saqlang.';
- page('editor');await seriesEditor.open(movie);
+ page('editor');await Promise.all([seriesEditor.open(movie),creditsEditor.open(movie)]);
 }
 for(const kind of ['banner','poster','logo']){
  const input=$(kind+'-file'),zone=input.closest('.file-zone');
@@ -245,6 +246,7 @@ async function init(){
 }
 window.addEventListener('beforeunload',()=>{for(const url of previews.values())URL.revokeObjectURL(url);});
 const seriesEditor=installAdminSeries({api,toast,getMovies:()=>movies,openEditor,reload:loadData});
+const creditsEditor=installAdminCredits({api,toast,openEditor});
 $('selection-sound-enabled').onchange=()=>homeDirty=true;
 $('clear-logo').onclick=async()=>{if(!editing||busy)return;try{await api('/movies/'+editing,{method:'PATCH',body:{clear_logo:true}});await loadData();await openEditor(editing);toast('Logo olib tashlandi.');}catch(error){toast(error.message);}};
 if(API_BASE&&new URL(API_BASE).origin!==location.origin)location.replace(API_BASE+'/admin/');else init();

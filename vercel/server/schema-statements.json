@@ -5,5 +5,7 @@
   "CREATE TABLE IF NOT EXISTS sources (\n movie_id INTEGER NOT NULL REFERENCES movies(id),\n quality TEXT NOT NULL,\n url TEXT NOT NULL,\n PRIMARY KEY(movie_id, quality)\n)",
   "CREATE TABLE IF NOT EXISTS telegram_updates (\n id INTEGER PRIMARY KEY,\n status TEXT NOT NULL DEFAULT 'pending',\n lease_until INTEGER NOT NULL DEFAULT 0,\n completed_at INTEGER\n)",
   "CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY,value TEXT NOT NULL)",
-  "CREATE TABLE IF NOT EXISTS seasons (\n series_id INTEGER NOT NULL REFERENCES movies(id),\n number INTEGER NOT NULL,\n title TEXT NOT NULL DEFAULT '',\n description TEXT NOT NULL DEFAULT '',\n PRIMARY KEY(series_id,number)\n)"
+  "CREATE TABLE IF NOT EXISTS seasons (\n series_id INTEGER NOT NULL REFERENCES movies(id),\n number INTEGER NOT NULL,\n title TEXT NOT NULL DEFAULT '',\n description TEXT NOT NULL DEFAULT '',\n PRIMARY KEY(series_id,number)\n)",
+  "CREATE TABLE IF NOT EXISTS title_credits (\n movie_id INTEGER PRIMARY KEY REFERENCES movies(id),\n tmdb_id INTEGER,\n tmdb_type TEXT,\n tmdb_title TEXT,\n tmdb_year TEXT,\n cast_json TEXT NOT NULL DEFAULT '[]',\n directors_json TEXT NOT NULL DEFAULT '[]',\n provider_json TEXT,\n revision INTEGER NOT NULL DEFAULT 1,\n updated_at INTEGER NOT NULL\n)",
+  "CREATE TABLE IF NOT EXISTS tmdb_lookup_cache (key TEXT PRIMARY KEY,payload TEXT NOT NULL,expires INTEGER NOT NULL)"
 ]

@@ -1,3 +1,4 @@
+import {createCreditsView} from './credits.js';
 import './title-page.css';
 import {apiURL,normalizeMovie} from './api-client.js';
 import {setImage,setHeroBackground,setVideoPoster} from './artwork.js';
@@ -12,6 +13,7 @@ export class TitlePage{
   this.watch=document.getElementById('watch-section');this.originalParent=this.watch.parentNode;this.originalNext=this.watch.nextSibling;
   this.root=el('section','title-page');this.root.id='title-page';this.root.hidden=true;
   this.root.innerHTML='<div class="title-art" aria-hidden="true"></div><div class="title-shell"><button class="title-back secondary" type="button">\u2190 Katalogga qaytish</button><p class="title-status" role="status"></p><div class="title-overview" hidden><img class="title-poster" width="300" height="450" alt=""><div class="title-copy"><p class="title-type"></p><img class="title-logo" alt="" hidden><h1 class="title-name" tabindex="-1"></h1><p class="title-meta"></p><p class="title-description"></p><div class="title-buttons"><button class="primary title-play" type="button">\u25b6 Tomosha qilish</button><button class="secondary title-save" type="button">Ro\u2018yxatga</button></div></div></div><div class="title-player-mount"></div><div class="episode-navigation" hidden><button class="secondary previous-episode" type="button">\u2190 Oldingi qism</button><span class="current-episode"></span><button class="primary next-episode" type="button">Keyingi qism \u2192</button></div><section class="seasons-panel" hidden aria-labelledby="seasons-heading"><div class="seasons-heading"><h2 id="seasons-heading">Fasl va qismlar</h2><label>Faslni tanlang<select class="season-select"></select></label></div><p class="season-description"></p><p class="episode-count"></p><div class="episode-list"></div><button class="secondary episodes-more" type="button" hidden>Yana qismlar</button><p class="episodes-empty" hidden>Bu faslga hali qism qo\u2018shilmagan.</p></section></div>';
+  this.creditView=createCreditsView();this.find('.title-overview').after(this.creditView.root);
   document.querySelector('main').prepend(this.root);
   this.overlay=el('div','next-episode-overlay');this.overlay.hidden=true;
   this.overlay.innerHTML='<button type="button" class="next-preview"><img alt="" width="200" height="112"><span><small>KEYINGI QISM</small><strong></strong><span class="next-caption"></span></span><b aria-hidden="true">\u25b6</b></button>';
@@ -41,7 +43,7 @@ export class TitlePage{
   if(navigate)selectionSound();const version=++this.version;this.controller?.abort();this.controller=new AbortController();
   this.lastFocus=document.activeElement;this.active=true;this.data=null;this.current=null;this.player.reset();this.overlay.hidden=true;
   this.root.hidden=false;document.body.classList.add('title-open');this.find('.title-overview').hidden=true;this.find('.seasons-panel').hidden=true;this.find('.episode-navigation').hidden=true;
-  this.watch.hidden=true;this.find('.title-player-mount').append(this.watch);this.find('.title-status').textContent='Ma\u2019lumotlar yuklanmoqda...';
+  this.creditView.render(null);this.watch.hidden=true;this.find('.title-player-mount').append(this.watch);this.find('.title-status').textContent='Ma\u2019lumotlar yuklanmoqda...';
   if(navigate)history.pushState({},'', '/title/'+encodeURIComponent(movie.collection_id||movie.id)+(episode?'?episode='+encodeURIComponent(episode):''));
   window.scrollTo({top:0,behavior:'instant'});
   try{
@@ -57,6 +59,7 @@ export class TitlePage{
   if(this.lastFocus?.isConnected)this.lastFocus.focus({preventScroll:true});
  }
  render(){
+  this.creditView.render(this.data.credits);
   const {movie,seasons}=this.data;this.find('.title-overview').hidden=false;
   setHeroBackground(this.find('.title-art'),movie.backdrop);setImage(this.find('.title-poster'),movie.poster);this.find('.title-poster').alt=movie.title;
   wordmark(this.find('.title-logo'),movie.logo,movie.title);this.find('.title-name').textContent=movie.title;this.find('.title-type').textContent=types[movie.type]||'Kino';

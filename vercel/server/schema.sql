@@ -53,3 +53,17 @@ CREATE TABLE IF NOT EXISTS seasons (
  description TEXT NOT NULL DEFAULT '',
  PRIMARY KEY(series_id,number)
 );
+
+CREATE TABLE IF NOT EXISTS title_credits (
+ movie_id INTEGER PRIMARY KEY REFERENCES movies(id),
+ tmdb_id INTEGER,
+ tmdb_type TEXT,
+ tmdb_title TEXT,
+ tmdb_year TEXT,
+ cast_json TEXT NOT NULL DEFAULT '[]',
+ directors_json TEXT NOT NULL DEFAULT '[]',
+ provider_json TEXT,
+ revision INTEGER NOT NULL DEFAULT 1,
+ updated_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS tmdb_lookup_cache (key TEXT PRIMARY KEY,payload TEXT NOT NULL,expires INTEGER NOT NULL);

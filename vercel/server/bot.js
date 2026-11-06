@@ -1,3 +1,5 @@
+import {createWikidataService} from './wikidata-credits.js';
+import {getCredits,saveManualCredits,createTMDBService,removeTMDBCredits} from './credits.js';
 import {ensureSeriesSchema,createCollection,saveSeason,removeSeason,attachEpisode,detachEpisode,restoreTitle,titleDetails} from './series.js';
 import {telegramImage,MAX_IMAGE_BYTES} from './image-media.js';
 
@@ -11,7 +13,7 @@ export async function processMessage(db,msg){
 async function handleMessage(db,msg){
  const chat=msg.chat;if(chat?.type!=='private'||String(msg.from?.id)!==process.env.ADMIN_USER_ID)return null;
  const text=msg.text||msg.caption||'';const [cmd0,...parts]=text.trim().split(/\s+/);const cmd=cmd0?.split('@')[0];
- if(cmd==='/start'||cmd==='/help')return "Film yuboring. /list; /title ID yangi nom; /description ID tavsif; /genre ID action,drama; /source ID hls URL yoki /source ID 480 URL; /delete ID; /restore ID. /unsource ID 720; /backdrop ID HTTPS_URL; /posterurl ID HTTPS_URL. Banner rasmining captioni: /banner ID. Poster rasmining captioni: /poster ID. /meta ID 2018 6.5 movie\n\nSerial: /series Stranger Things\nAnime: /series anime Serial nomi\nFasl: /season SERIAL_ID 2 Fasl nomi\nQism biriktirish: /episode SERIAL_ID 2 1 VIDEO_ID\nYangi videoning captioni: /episode SERIAL_ID 2 1 Qism nomi\nQismlar: /episodes SERIAL_ID 2\nAjratish: /unepisode VIDEO_ID\nBosh faslni olib tashlash: /seasondelete SERIAL_ID 2\nLogo faylining captioni: /logo ID\nLogoni olib tashlash: /logooff ID\nTanlash ovozi: /sound on yoki /sound off";
+ if(cmd==='/start'||cmd==='/help')return "Film yuboring. /list; /title ID yangi nom; /description ID tavsif; /genre ID action,drama; /source ID hls URL yoki /source ID 480 URL; /delete ID; /restore ID. /unsource ID 720; /backdrop ID HTTPS_URL; /posterurl ID HTTPS_URL. Banner rasmining captioni: /banner ID. Poster rasmining captioni: /poster ID. /meta ID 2018 6.5 movie\n\nSerial: /series Stranger Things\nAnime: /series anime Serial nomi\nFasl: /season SERIAL_ID 2 Fasl nomi\nQism biriktirish: /episode SERIAL_ID 2 1 VIDEO_ID\nYangi videoning captioni: /episode SERIAL_ID 2 1 Qism nomi\nQismlar: /episodes SERIAL_ID 2\nAjratish: /unepisode VIDEO_ID\nBosh faslni olib tashlash: /seasondelete SERIAL_ID 2\nLogo faylining captioni: /logo ID\nLogoni olib tashlash: /logooff ID\nTanlash ovozi: /sound on yoki /sound off\n\nAktyorlar: /credits ID\nBepul Wikidata: /wikidata ID Q12345\nTMDB ulash: /tmdb ID movie TMDB_ID yoki /tmdb ID tv TMDB_ID\nTMDB malumotlarini tozalash: /untmdb ID\nQolda qoshish: /credit ID actor Ism | Rol | HTTPS_SURAT\nRejissyor: /credit ID director Ism | Rejissyor | HTTPS_SURAT\nOlib tashlash: /uncredit ID YOZUV_ID";
  if(cmd==='/series'){
   const type=['series','anime','animation'].includes(parts[0])?parts.shift():'series';
   const movie=await createCollection(db,{title:parts.join(' '),type,genres:type==='series'?[]:[type]});
@@ -31,6 +33,21 @@ async function handleMessage(db,msg){
   if(!['on','off'].includes(parts[0]))return '/sound on yoki /sound off';
   const rows=await db.execute("SELECT value FROM site_settings WHERE key='home'");let home={};try{home=JSON.parse(rows.rows[0]?.value||'{}');}catch{}
   home.selection_sound_enabled=parts[0]==='on';await db.execute({sql:"INSERT INTO site_settings(key,value) VALUES('home',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",args:[JSON.stringify(home)]});return 'Tanlash ovozi '+(home.selection_sound_enabled?'yoqildi.':'ochirildi.');
+ }
+ if(cmd==='/wikidata'){const [id,wikidata_id]=parts;const data=await createWikidataService({db}).importTitle(id,{wikidata_id});return data.cast.length+' aktyor, '+data.directors.length+' rejissyor Wikidatadan saqlandi.';}
+ if(cmd==='/tmdb'){const [id,type,tmdb_id]=parts;const data=await createTMDBService({db}).importTitle(id,{type,tmdb_id});return 'TMDB ulandi: '+data.tmdb.title+'\n'+data.cast.length+' aktyor, '+data.directors.length+' rejissyor saqlandi.';}
+ if(cmd==='/untmdb'){const data=await getCredits(db,parts[0]);await removeTMDBCredits(db,parts[0],data.revision);return 'TMDBdan olingan malumotlar olib tashlandi. Qolda kiritilganlar saqlandi.';}
+ if(cmd==='/credits'){
+  const data=await getCredits(db,parts[0]);return (data.tmdb?'TMDB: '+data.tmdb.title+'\n':'')+([...data.cast.map(p=>'Aktyor: '+p.name+' / '+p.role+' ['+p.id+']'),...data.directors.map(p=>'Rejissyor: '+p.name+' ['+p.id+']')].slice(0,12).join('\n')||'Aktyorlar hali kiritilmagan.')+'\nTahrirlash uchun admin paneldan ham foydalanishingiz mumkin.';
+ }
+ if(cmd==='/credit'){
+  const [id,kind,...value]=parts;if(!['actor','director'].includes(kind))return '/credit ID actor Ism | Rol | HTTPS_SURAT';
+  const [name,role='',photo='']=value.join(' ').split('|').map(v=>v.trim()),current=await getCredits(db,id);
+  current[kind==='actor'?'cast':'directors'].push({name,role,photo});await saveManualCredits(db,id,current);return 'Saqlandi.';
+ }
+ if(cmd==='/uncredit'){
+  const [id,key]=parts,current=await getCredits(db,id);if(![...current.cast,...current.directors].some(p=>p.id===key))return 'Yozuv topilmadi. /credits '+id;
+  await saveManualCredits(db,id,{...current,cast:current.cast.filter(p=>p.id!==key),directors:current.directors.filter(p=>p.id!==key)});return 'Yozuv olib tashlandi.';
  }
  if(cmd==='/list'){const rows=await db.execute('SELECT id,title FROM movies WHERE deleted=0 ORDER BY id DESC LIMIT 20');return rows.rows.map(r=>r.id+'. '+r.title.slice(0,150)).join('\n')||'Hali film yoq.';}
  if((msg.video||msg.document)&&!['/poster','/banner','/logo'].includes(cmd)){
