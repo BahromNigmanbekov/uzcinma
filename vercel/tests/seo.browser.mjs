@@ -21,8 +21,8 @@ const photos=new Map(),calls=[];
 const service=createCloudManage({db,config,telegramCheck:async()=>({ok:true,result:{username:'fixture_bot'}}),transport:async input=>{calls.push(input.kind);photos.set(input.kind,{body:input.data,mime:input.mime});input.progress(input.data.length);return {document:{file_id:'fixture-'+input.kind,mime_type:input.mime,file_size:input.data.length}};}});
 const handlers=Object.fromEntries(await Promise.all(['catalog','playback','title'].map(async name=>[name,(await import('../api/'+name+'.js')).default])));
 const dist=resolve('dist'),mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.webp':'image/webp'};
-const {createSEOHandler}=await import('../api/seo.js'),{createSEORepository}=await import('../server/seo-content.js');
-const seo=createSEOHandler({repo:createSEORepository({db,bundled:null}),getTemplate:()=>readFileSync(resolve(dist,'index.html'),'utf8')});
+const {createSEOHandler,template}=await import('../api/seo.js'),{createSEORepository}=await import('../server/seo-content.js');
+const seo=createSEOHandler({repo:createSEORepository({db,bundled:null}),getTemplate:template});
 const server=createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://localhost');res.setHeader('Cache-Control','no-store');req.query=Object.fromEntries(url.searchParams);
  const titleRoute=/^\/title\/([^/]+)$/.exec(url.pathname),mapRoute=/^\/sitemaps\/titles-(\d+)\.xml$/.exec(url.pathname);

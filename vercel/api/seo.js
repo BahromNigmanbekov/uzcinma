@@ -5,7 +5,7 @@ import {createSEORepository} from '../server/seo-content.js';
 import {renderDocument,homeBody,titleBody,errorBody,sitemapIndex,pagesSitemap,titleSitemap} from '../server/seo-render.js';
 import {homeSEO,movieSEO,SITE_ORIGIN} from '../shared/seo.js';
 let shell;
-function template(){return shell??=readFileSync(join(process.cwd(),'dist','index.html'),'utf8');}
+export function template(){return shell??=readFileSync(join(process.cwd(),'index.html'),'utf8').replace('src="/src/main.js"','src="/app-client.js"').replace('</head>','<link rel="stylesheet" href="/app-client.css"></head>');}
 export function createSEOHandler({repo=createSEORepository(),getTemplate=template}={}){
  return async function handler(req,res){
   const p=query(req),view=p.view||'home';
@@ -40,7 +40,7 @@ export function createSEOHandler({repo=createSEORepository(),getTemplate=templat
    const meta=homeSEO({page,movies:first,settings}),featured=home?.hero?.[0]||first[0];
    return finish(200,'text/html',renderDocument(getTemplate(),{meta,settings,body:homeBody(first,{page,total,featured,settings}),preload:featured?.backdrop,bootstrap:{catalog,offset,settings}}),30);
   }catch(error){
-   const status=error.status===404||error.status===400?404:503;res.setHeader('X-Robots-Tag','noindex');if(status===503)res.setHeader('Retry-After','60');
+   const status=error.status===404||error.status===400?404:503;res.setHeader('X-Uzcinma-SEO-Error',String(error.code||error.name||'unknown').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,50));res.setHeader('X-Robots-Tag','noindex');if(status===503)res.setHeader('Retry-After','60');
    const meta={title:(status===404?'Sahifa topilmadi':'Vaqtincha mavjud emas')+' | UZCINMA',description:'UZCINMA kino katalogi',canonical:SITE_ORIGIN+'/',type:'website',image:SITE_ORIGIN+'/assets/uzcinma-banner-v2.png',imageAlt:'UZCINMA',graph:[]};
    try{return finish(status,'text/html',renderDocument(getTemplate(),{meta,body:errorBody(status),noindex:true,error:true}));}catch{return finish(503,'text/plain','Sahifani hozir ochib bo‘lmadi.');}
   }
