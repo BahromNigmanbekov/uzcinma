@@ -68,8 +68,8 @@ def export(database,cache,project):
    name=kind+'-'+digest+suffix
    if not (media/name).is_file():shutil.copyfile(image,media/name)
    return '/media/'+name
-  poster_url=uploaded_artwork('poster') or '/assets/uzcinma-poster.png'
-  banner_url=uploaded_artwork('banner') or '/assets/uzcinma-banner.png'
+  poster_url=uploaded_artwork('poster') or '/assets/uzcinma-poster-v2.png'
+  banner_url=uploaded_artwork('banner') or '/assets/uzcinma-banner-v2.png'
   genres=[]
   try:genres=json.loads(row.get('genres') or '[]')
   except (TypeError,ValueError):pass

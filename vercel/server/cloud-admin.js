@@ -13,7 +13,7 @@ export async function initializeCatalog(db,body){
   if(!integer(row.id,1)||seen.has(Number(row.id))||typeof row.file_unique_id!=='string'||!row.file_unique_id||typeof row.file_id!=='string'||!row.file_id||typeof row.title!=='string'||!row.title.trim()||row.title.length>200||!integer(row.file_size,1)||!integer(row.source_message_id,1))throw Object.assign(Error('Invalid movie metadata'),{status:400});
   seen.add(Number(row.id));
  }
- await ensureSchema(db);
+ const schema=await ensureSchema(db);
  for(const row of body.movies){
   const existing=await db.execute({sql:'SELECT id,file_unique_id FROM movies WHERE id=? OR file_unique_id=?',args:[Number(row.id),row.file_unique_id]});
   if(existing.rows.some(old=>Number(old.id)!==Number(row.id)||old.file_unique_id!==row.file_unique_id))throw Object.assign(Error('Existing catalog IDs conflict; no movies were replaced'),{status:409});
@@ -29,5 +29,5 @@ export async function initializeCatalog(db,body){
  }
  if(body.home&&typeof body.home==='object')statements.push({sql:"INSERT INTO site_settings(key,value) VALUES('home',?) ON CONFLICT(key) DO NOTHING",args:[JSON.stringify(body.home)]});
  if(statements.length)await db.batch(statements,'write');
- return {ok:true,imported:body.movies.length};
+ return {ok:true,imported:body.movies.length,branding_updated:schema.branding_updated};
 }

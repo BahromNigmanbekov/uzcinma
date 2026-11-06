@@ -47,7 +47,7 @@
 }
 @media(max-width:639px){
  :root{--header-height:76px}
- .hero .hero-slide{--hero-image-size:cover;--hero-image-position:65% center;--hero-default-size:cover;--hero-default-position:center}
+ .hero .hero-slide{--hero-image-size:cover;--hero-image-position:65% center;--hero-default-size:100% auto;--hero-default-position:center 15%}
  .hero .hero-slide:after{background:linear-gradient(0deg,#09090d 0%,#09090de8 16%,#09090db5 48%,#09090d28 82%,#09090db0 100%),linear-gradient(90deg,#09090d80,transparent)}
  .hero .hero-content{padding:calc(var(--header-height) + 28px) var(--page-gutter) 72px;justify-content:flex-end}
  .hero .hero-duration{font-size:12px;margin-bottom:12px}.hero .hero-rating{max-width:100%}

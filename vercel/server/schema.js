@@ -1,3 +1,4 @@
+import {migrateBrandArtwork} from './brand-artwork.js';
 import {ensureCreditsSchema} from './credits.js';
 import {ensureSeriesSchema} from './series.js';
 import * as schemaModule from './schema-statements.json' with {type:'json'};
@@ -10,4 +11,5 @@ export async function ensureSchema(db){
   if(!columns.has(name))await db.execute('ALTER TABLE movies ADD COLUMN '+name+' '+type);
  }
  await ensureSeriesSchema(db);await ensureCreditsSchema(db);
+ return {branding_updated:await migrateBrandArtwork(db)};
 }

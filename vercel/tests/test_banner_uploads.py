@@ -30,7 +30,7 @@ class BannerUploads(unittest.TestCase):
   self.assertEqual(before['backdrop'],after['backdrop']);self.assertTrue(after['poster'].startswith('/media/poster-'));self.assertNotEqual(after['poster'],after['backdrop'])
  def test_pending_download_uses_independent_default_artwork(self):
   bot.store_artwork(self.db,4,'banner',{'file_id':'pending','file_unique_id':'pending'})
-  item=self.snapshot();self.assertEqual(item['backdrop'],'/assets/uzcinma-banner.png');self.assertEqual(item['poster'],'/assets/uzcinma-poster.png')
+  item=self.snapshot();self.assertEqual(item['backdrop'],'/assets/uzcinma-banner-v2.png');self.assertEqual(item['poster'],'/assets/uzcinma-poster-v2.png')
  def test_prepared_hls_source_survives_catalog_export(self):
   self.snapshot()
   media=self.project/'public/media';master=media/'hls-test-master.m3u8';master.write_text('#EXTM3U\\n')

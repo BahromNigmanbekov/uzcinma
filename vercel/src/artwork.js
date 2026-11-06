@@ -1,5 +1,5 @@
-export const DEFAULT_POSTER='/assets/uzcinma-poster.png';
-export const DEFAULT_BANNER='/assets/uzcinma-banner.png';
+export const DEFAULT_POSTER='/assets/uzcinma-poster-v2.png';
+export const DEFAULT_BANNER='/assets/uzcinma-banner-v2.png';
 
 export function setImage(image,source,kind='poster'){
  const fallback=kind==='banner'?DEFAULT_BANNER:DEFAULT_POSTER;
