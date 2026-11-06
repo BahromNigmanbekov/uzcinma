@@ -76,10 +76,17 @@ export class MoviePlayer {
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&this.root.classList.contains('is-fullscreen')){e.preventDefault();this.exitFullscreen();}});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)this.savePosition(true);});
   window.addEventListener('pagehide',()=>this.savePosition(true));
+  window.addEventListener('resize',()=>this.positionSettings());window.addEventListener('scroll',()=>this.positionSettings(),true);
  }
  loading(active){this.root.classList.toggle('loading',active);this.root.setAttribute('aria-busy',String(active));$('player-loading').hidden=!active;}
  message(text){$('player-message').textContent=text;}
- settings(open){if(!open)closeSelectMenus(this.root);$('settings-panel').hidden=!open;$('settings-toggle').setAttribute('aria-expanded',String(open));this.showControls();}
+ settings(open){if(!open)closeSelectMenus(this.root);$('settings-panel').hidden=!open;$('settings-toggle').setAttribute('aria-expanded',String(open));if(open)this.positionSettings();this.showControls();}
+ positionSettings(){
+  const panel=$('settings-panel');if(panel.hidden)return;const anchor=$('settings-toggle').getBoundingClientRect();
+  if(anchor.bottom<0||anchor.top>innerHeight){this.settings(false);return;}
+  const width=panel.offsetWidth,height=panel.offsetHeight,margin=12;
+  panel.style.left=Math.max(margin,Math.min(innerWidth-width-margin,anchor.right-width))+'px';panel.style.top=Math.max(margin,Math.min(innerHeight-height-margin,anchor.top-height-10))+'px';
+ }
  showControls(){
   this.root.classList.remove('controls-hidden');clearTimeout(this.hideTimer);
   if(!this.video.paused&&!this.video.ended)this.hideTimer=setTimeout(()=>this.hideControls(),CONTROLS_IDLE_MS);

@@ -5,3 +5,7 @@
 .player:fullscreen{max-height:none!important}.player.is-fullscreen{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-height:none!important;aspect-ratio:auto!important;border-radius:0!important;z-index:1000!important}.site-fullscreen{overflow:hidden!important}.site-fullscreen #header{visibility:hidden}.player.is-fullscreen .player-controls{bottom:max(18px,env(safe-area-inset-bottom));left:3%;right:3%}
 @media(max-width:600px){.video-zoom-reset{top:8px;right:8px;min-height:34px;font-size:12px}.player .settings-panel{width:220px;right:-8px;bottom:48px;max-height:calc(100dvh - 95px)}}
 .tv-mode .video-view-label,.tv-mode .video-zoom-label,.tv-mode .video-zoom-label output{font-size:19px}.tv-mode .video-fit-buttons button{min-height:52px;font-size:17px}.tv-mode .player .settings-panel{width:310px;padding:22px;gap:16px;max-height:75vh}.tv-mode .video-zoom-reset{font-size:19px;min-height:50px}
+
+.player .settings-panel{position:fixed;z-index:30;right:auto;bottom:auto;width:260px;max-height:calc(100dvh - 24px)}
+@media(max-width:600px){.player .settings-panel{width:270px;max-width:calc(100vw - 24px);right:auto;bottom:auto;max-height:calc(100dvh - 24px)}}
+.tv-mode .player .settings-panel{width:310px;max-height:calc(100dvh - 24px)}
