@@ -1,6 +1,8 @@
 import {readFileSync,writeFileSync,unlinkSync} from 'node:fs';
 import {resolve,dirname,posix} from 'node:path';
 const output=resolve('dist'),index=resolve(output,'index.html'),html=readFileSync(index,'utf8');
+const source=readFileSync(resolve('index.html'),'utf8').replace('src="/src/main.js"','src="/app-client.js"').replace('</head>','<link rel="stylesheet" href="/app-client.css"></head>');
+writeFileSync(resolve('server/seo-shell.js'),'// Generated from index.html by scripts/seo-assets.mjs.\nexport const seoShell='+JSON.stringify(source)+';\n');
 const scripts=[...html.matchAll(/<script\b[^>]*type="module"[^>]*src="([^"]+)"[^>]*>/g)].map(m=>m[1]);
 const styles=[...html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/g)].map(m=>m[1]);
 if(!scripts.length||!styles.length)throw Error('Vite client entries were not found');

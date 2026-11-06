@@ -5,7 +5,7 @@
   "functions": {
     "api/*.js": {
       "maxDuration": 60,
-      "includeFiles": "{server/**,shared/**,index.html}"
+      "includeFiles": "{server/**,shared/**}"
     }
   },
   "headers": [

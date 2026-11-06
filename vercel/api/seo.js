@@ -1,11 +1,9 @@
-import {readFileSync} from 'node:fs';
-import {join} from 'node:path';
+import {seoShell} from '../server/seo-shell.js';
 import {query} from '../server/core.js';
 import {createSEORepository} from '../server/seo-content.js';
 import {renderDocument,homeBody,titleBody,errorBody,sitemapIndex,pagesSitemap,titleSitemap} from '../server/seo-render.js';
 import {homeSEO,movieSEO,SITE_ORIGIN} from '../shared/seo.js';
-let shell;
-export function template(){return shell??=readFileSync(join(process.cwd(),'index.html'),'utf8').replace('src="/src/main.js"','src="/app-client.js"').replace('</head>','<link rel="stylesheet" href="/app-client.css"></head>');}
+export function template(){return seoShell;}
 export function createSEOHandler({repo=createSEORepository(),getTemplate=template}={}){
  return async function handler(req,res){
   const p=query(req),view=p.view||'home';
